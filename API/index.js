@@ -51,7 +51,6 @@ function validateSubmission(body) {
 // ---- Cosmos setup (cheap + simple) ----
 const COSMOS_CONNECTION_STRING = process.env.COSMOS_CONNECTION_STRING;
 if (!COSMOS_CONNECTION_STRING) {
-  // Fail fast so you don't get mysterious 500s
   throw new Error("Missing COSMOS_CONNECTION_STRING app setting");
 }
 
@@ -111,7 +110,6 @@ app.http("submit", {
       };
     }
 
-    // Persist only validated fields (data minimization)
     const document = {
       id: crypto.randomUUID(),
       partition: "responses",
@@ -121,8 +119,6 @@ app.http("submit", {
 
     try {
       await container.items.create(document);
-
-      // Return the id so you can verify it exists in Cosmos immediately
       return {
         status: 200,
         jsonBody: { ok: true, id: document.id }
