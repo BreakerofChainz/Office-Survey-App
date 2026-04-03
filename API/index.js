@@ -121,6 +121,12 @@ app.http("submit", {
 
     try {
       await container.items.create(document);
+      
+return {
+  status: 200,
+  jsonBody: { ok: true, id: document.id }
+};
+
     } catch (err) {
       // Keep errors minimal; don't leak internals to the client
       context.log.error("Cosmos write failed", err);
