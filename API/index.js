@@ -36,4 +36,3 @@ app.http("submit", {
     jsonBody: { ok: true, endpoint: "submit" }
   })
 });
-``
