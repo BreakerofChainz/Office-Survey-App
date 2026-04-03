@@ -1,6 +1,8 @@
-
 const { app } = require("@azure/functions");
+const { CosmosClient } = require("@azure/cosmos");
+const crypto = require("crypto");
 
+// ---- Validation config ----
 const ALLOWED_FIELDS = {
   coffeePreference: ["Hot", "Iced", "Tea", "None"],
   meetingTime: ["Morning", "Afternoon", "NoPreference"],
@@ -29,7 +31,6 @@ function validateSubmission(body) {
     }
 
     const value = body[field];
-
     if (!allowedValues.includes(value)) {
       return { valid: false, error: `Invalid value for ${field}` };
     }
@@ -47,6 +48,18 @@ function validateSubmission(body) {
   return { valid: true, data: cleaned };
 }
 
+// ---- Cosmos setup (cheap + simple) ----
+const COSMOS_CONNECTION_STRING = process.env.COSMOS_CONNECTION_STRING;
+if (!COSMOS_CONNECTION_STRING) {
+  // Fail fast so you don't get mysterious 500s
+  throw new Error("Missing COSMOS_CONNECTION_STRING app setting");
+}
+
+const cosmosClient = new CosmosClient(COSMOS_CONNECTION_STRING);
+const database = cosmosClient.database("surveydb");
+const container = database.container("responses");
+
+// ---- Endpoints ----
 app.http("stats", {
   methods: ["GET"],
   authLevel: "anonymous",
@@ -77,7 +90,7 @@ app.http("submit", {
   methods: ["POST"],
   authLevel: "anonymous",
   route: "submit",
-  handler: async (request) => {
+  handler: async (request, context) => {
     let body;
 
     try {
@@ -98,11 +111,29 @@ app.http("submit", {
       };
     }
 
-    // ✅ Cosmos DB write will go here later
+    // Persist only validated fields (data minimization)
+    const document = {
+      id: crypto.randomUUID(),
+      partition: "responses",
+      ...result.data,
+      createdUtc: new Date().toISOString()
+    };
+
+    try {
+      await container.items.create(document);
+    } catch (err) {
+      // Keep errors minimal; don't leak internals to the client
+      context.log.error("Cosmos write failed", err);
+      return {
+        status: 500,
+        jsonBody: { ok: false, error: "Server error" }
+      };
+    }
+
     return {
       status: 200,
-      jsonBody: { ok: true, accepted: result.data }
+      jsonBody: { ok: true }
     };
   }
 });
-
+``
