@@ -4,6 +4,7 @@
   "private": true,
   "main": "index.js",
   "dependencies": {
+    "@azure/cosmos": "^4.9.2",
     "@azure/functions": "^4.0.0"
   }
 }
