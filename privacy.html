@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Privacy · OfficePulse</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+
+  <header class="site-header">
+    <div class="logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">OfficePulse</span>
+    </div>
+    <nav class="site-nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="survey.html" class="nav-link">Survey</a>
+      <a href="privacy.html" class="nav-link active">Privacy</a>
+    </nav>
+  </header>
+
+  <main class="privacy-main">
+    <div class="privacy-container">
+
+      <div class="landing-badge">Last Updated · April 2025</div>
+      <h1 class="privacy-title">Privacy Statement</h1>
+      <p class="privacy-lead">
+        OfficePulse is a personal home lab project. This page explains clearly and honestly
+        what data is — and is not — collected when you take the survey.
+      </p>
+
+      <div class="privacy-section">
+        <h2>What we collect</h2>
+        <p>
+          We collect only your survey responses — the multiple-choice answers you select
+          for each of the 10 questions. Responses are assigned a random session ID
+          generated at the time of submission and are stored in an Azure Cosmos DB
+          database for the sole purpose of data analysis within this home lab project.
+        </p>
+      </div>
+
+      <div class="privacy-section">
+        <h2>What we do <em>not</em> collect</h2>
+        <ul class="privacy-list">
+          <li>Your name, email, or any identifying personal information</li>
+          <li>Your IP address</li>
+          <li>Device information, browser fingerprints, or hardware details</li>
+          <li>Location data</li>
+          <li>Cookies or tracking pixels</li>
+        </ul>
+      </div>
+
+      <div class="privacy-section">
+        <h2>How responses are stored</h2>
+        <p>
+          Submitted responses are sent to an Azure Cosmos DB instance via a secure API.
+          Each submission is stored as a JSON document containing only:
+        </p>
+        <div class="code-block">
+          <pre>{
+  "id": "&lt;random-uuid&gt;",
+  "submittedAt": "&lt;ISO timestamp&gt;",
+  "answers": {
+    "q1": "Hot coffee",
+    "q2": "Late morning",
+    ...
+  }
+}</pre>
+        </div>
+        <p>
+          No linkage between submissions and individuals exists in this structure by design.
+        </p>
+      </div>
+
+      <div class="privacy-section">
+        <h2>Third-party sharing</h2>
+        <p>
+          Responses are never sold, shared with advertisers, or disclosed to any third party.
+          This is a personal lab project with no commercial purpose.
+        </p>
+      </div>
+
+      <div class="privacy-section">
+        <h2>Contact</h2>
+        <p>
+          This project is hosted on GitHub at
+          <a href="https://github.com/BreakerofChainz/Office-Survey-App/tree/main" class="inline-link" target="_blank" rel="noopener">
+            BreakerofChainz/Office-Survey-App
+          </a>.
+          If you have questions about how data is handled, feel free to open an issue in the repository.
+        </p>
+      </div>
+
+      <div class="privacy-actions">
+        <a href="survey.html" class="btn-primary">
+          <span>Take the Survey</span>
+          <span class="btn-arrow">→</span>
+        </a>
+        <a href="index.html" class="btn-secondary">← Back to Home</a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <span>© 2025 OfficePulse · Home Lab Project</span>
+    <a href="privacy.html">Privacy</a>
+  </footer>
+
+</body>
+</html>

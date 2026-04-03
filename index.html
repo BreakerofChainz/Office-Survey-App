@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Office Pulse Survey</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+
+  <header class="site-header">
+    <div class="logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">OfficePulse</span>
+    </div>
+    <nav class="site-nav">
+      <a href="index.html" class="nav-link active">Home</a>
+      <a href="survey.html" class="nav-link">Survey</a>
+      <a href="privacy.html" class="nav-link">Privacy</a>
+    </nav>
+  </header>
+
+  <main class="landing-main">
+    <div class="landing-container">
+
+      <div class="landing-badge">Home Lab Project · 2025</div>
+
+      <h1 class="landing-title">
+        How Does Your<br/>
+        <span class="accent-text">Office Tick?</span>
+      </h1>
+
+      <p class="landing-description">
+        Welcome! This is a quick 10-question office culture survey built as part of a
+        personal home lab project. Your answers help explore patterns in how people
+        work, collaborate, and stay productive.
+      </p>
+
+      <div class="privacy-notice">
+        <span class="notice-icon">🔒</span>
+        <p>
+          <strong>Heads up:</strong> No personally identifiable information is collected.
+          Device data is <em>not</em> stored. Responses are submitted anonymously and
+          used solely for this project's data exploration purposes.
+          <a href="privacy.html" class="inline-link">Read our privacy statement →</a>
+        </p>
+      </div>
+
+      <div class="landing-actions">
+        <a href="survey.html" class="btn-primary">
+          <span>Start the Survey</span>
+          <span class="btn-arrow">→</span>
+        </a>
+        <span class="survey-meta">10 questions &nbsp;·&nbsp; ~2 minutes</span>
+      </div>
+
+    </div>
+
+    <div class="landing-visual" aria-hidden="true">
+      <div class="visual-card card-1">
+        <div class="vc-label">Meeting Pref.</div>
+        <div class="vc-bar-group">
+          <div class="vc-bar" style="width:72%"><span>Late Morning</span></div>
+          <div class="vc-bar" style="width:48%"><span>Afternoon</span></div>
+          <div class="vc-bar" style="width:31%"><span>Early AM</span></div>
+        </div>
+      </div>
+      <div class="visual-card card-2">
+        <div class="vc-label">Work Style</div>
+        <div class="vc-donut">
+          <svg viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="30" fill="none" stroke="var(--accent)" stroke-width="14" stroke-dasharray="75 113" stroke-dashoffset="0"/>
+            <circle cx="40" cy="40" r="30" fill="none" stroke="var(--accent2)" stroke-width="14" stroke-dasharray="40 113" stroke-dashoffset="-75"/>
+            <circle cx="40" cy="40" r="30" fill="none" stroke="var(--muted-line)" stroke-width="14" stroke-dasharray="30 113" stroke-dashoffset="-115"/>
+          </svg>
+          <div class="donut-legend">
+            <span style="color:var(--accent)">● Hybrid</span>
+            <span style="color:var(--accent2)">● Office</span>
+            <span style="color:var(--muted-line)">● Home</span>
+          </div>
+        </div>
+      </div>
+      <div class="visual-card card-3">
+        <div class="vc-label">Coffee Order</div>
+        <div class="vc-icons">
+          <div class="vc-icon-row">☕ Hot <strong>41%</strong></div>
+          <div class="vc-icon-row">🧊 Iced <strong>29%</strong></div>
+          <div class="vc-icon-row">🍵 Tea <strong>19%</strong></div>
+          <div class="vc-icon-row">🚫 None <strong>11%</strong></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <span>© 2025 OfficePulse · Home Lab Project</span>
+    <a href="privacy.html">Privacy</a>
+  </footer>
+
+</body>
+</html>
