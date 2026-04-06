@@ -17,11 +17,9 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_GENTLE_TREE_00BF40E0F }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-
-          # Frontend (static HTML in repo root)
           app_location: "/"
           output_location: ""
           skip_app_build: true
-
-          # API (Azure Functions in /API folder)
-          api_location: "API"
+          # api_location is intentionally omitted.
+          # The API runs on a separate standalone Azure Function App.
+          # SWA should only deploy the static frontend files.
