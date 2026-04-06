@@ -60,7 +60,7 @@ body > *:not(.bg-grid) { position: relative; z-index: 1; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 2.5rem;
+  padding: 0.75rem 2.5rem;
   border-bottom: 1px solid var(--border);
   background: rgba(14,17,23,0.85);
   backdrop-filter: blur(12px);
@@ -77,7 +77,7 @@ body > *:not(.bg-grid) { position: relative; z-index: 1; }
 }
 
 .logo-img {
-  height: 44px;
+  height: 72px;
   width: auto;
   display: block;
   transition: opacity var(--transition);
