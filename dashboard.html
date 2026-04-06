@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard · Sky Forged Labs</title>
+  <meta name="description" content="Live survey results dashboard. Anonymous office culture data visualized with Chart.js, powered by Azure Functions and Cosmos DB." />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js from CDN – no install needed -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+
+  <header class="site-header">
+    <a href="index.html" class="logo" aria-label="Sky Forged Labs – Home">
+      <img src="Logo.png" alt="Sky Forged Labs" class="logo-img" />
+    </a>
+    <nav class="site-nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="survey.html" class="nav-link">Survey</a>
+      <a href="dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="privacy.html" class="nav-link">Privacy</a>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-dropdown" id="mobileDropdown">
+      <a href="index.html">Home</a>
+      <a href="survey.html">Survey</a>
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="privacy.html">Privacy</a>
+    </div>
+  </header>
+
+  <script>
+    const btn  = document.getElementById('hamburger');
+    const menu = document.getElementById('mobileDropdown');
+    btn.addEventListener('click', () => {
+      const isOpen = menu.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+      btn.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove('open');
+        btn.classList.remove('open');
+        btn.setAttribute('aria-expanded', false);
+      }
+    });
+  </script>
+
+  <main class="dash-main">
+
+    <!-- ── Page Header ── -->
+    <div class="dash-page-header">
+      <div>
+        <div class="landing-badge">Live Data · Azure Functions + Cosmos DB</div>
+        <h1 class="dash-title">Survey <span class="accent-text">Results</span></h1>
+        <p class="dash-subtitle">
+          Real-time aggregation of anonymous office culture survey responses.
+          Data flows from the survey form → Azure Function → Cosmos DB → this dashboard.
+        </p>
+      </div>
+      <div class="dash-meta-box" id="metaBox">
+        <div class="dash-meta-item">
+          <span class="dash-meta-value" id="totalCount">—</span>
+          <span class="dash-meta-label">Total Responses</span>
+        </div>
+        <div class="dash-meta-divider"></div>
+        <div class="dash-meta-item">
+          <span class="dash-meta-value" id="lastUpdated">—</span>
+          <span class="dash-meta-label">Last Refreshed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Loading / Error States ── -->
+    <div id="loadingState" class="dash-state">
+      <div class="dash-spinner"></div>
+      <p>Fetching data from Cosmos DB…</p>
+    </div>
+    <div id="errorState" class="dash-state dash-state--error" style="display:none;">
+      <span class="dash-state-icon">⚠</span>
+      <p id="errorMessage">Unable to load data. Please try again later.</p>
+      <button class="btn-secondary" onclick="loadStats()">Retry</button>
+    </div>
+
+    <!-- ── Charts Grid ── -->
+    <div id="chartsGrid" class="dash-grid" style="display:none;">
+
+      <!-- Submissions over time — full width -->
+      <div class="dash-card dash-card--wide">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Submissions Over Time</span>
+          <span class="dash-card-type">Line</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chart-timeseries"></canvas>
+        </div>
+      </div>
+
+      <!-- Q1 – Coffee -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Coffee Preference</span>
+          <span class="dash-card-type">Doughnut</span>
+        </div>
+        <div class="dash-chart-wrap dash-chart-wrap--sm">
+          <canvas id="chart-q1"></canvas>
+        </div>
+      </div>
+
+      <!-- Q8 – Work Location -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Work Location Preference</span>
+          <span class="dash-card-type">Doughnut</span>
+        </div>
+        <div class="dash-chart-wrap dash-chart-wrap--sm">
+          <canvas id="chart-q8"></canvas>
+        </div>
+      </div>
+
+      <!-- Q2 – Meeting Time -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Preferred Meeting Time</span>
+          <span class="dash-card-type">Bar</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chart-q2"></canvas>
+        </div>
+      </div>
+
+      <!-- Q5 – Productivity -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Peak Productivity Time</span>
+          <span class="dash-card-type">Bar</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chart-q5"></canvas>
+        </div>
+      </div>
+
+      <!-- Q3 – Worst Day -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Least Favorite Workday</span>
+          <span class="dash-card-type">Bar</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chart-q3"></canvas>
+        </div>
+      </div>
+
+      <!-- Q6 – Meetings Sentiment -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Feelings About Meetings</span>
+          <span class="dash-card-type">Bar</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chart-q6"></canvas>
+        </div>
+      </div>
+
+      <!-- Q4 – Work Style -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Project Work Style</span>
+          <span class="dash-card-type">Bar</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chart-q4"></canvas>
+        </div>
+      </div>
+
+      <!-- Q7 – Info Preference -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Preferred Info Format</span>
+          <span class="dash-card-type">Bar</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chart-q7"></canvas>
+        </div>
+      </div>
+
+      <!-- Q9 – Focus -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Best Focus Environment</span>
+          <span class="dash-card-type">Bar</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chart-q9"></canvas>
+        </div>
+      </div>
+
+      <!-- Q10 – Morning Routine -->
+      <div class="dash-card">
+        <div class="dash-card-header">
+          <span class="dash-card-label">Morning Routine</span>
+          <span class="dash-card-type">Bar</span>
+        </div>
+        <div class="dash-chart-wrap">
+          <canvas id="chart-q10"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /chartsGrid -->
+
+    <!-- ── Architecture callout ── -->
+    <div id="archCallout" class="dash-arch" style="display:none;">
+      <div class="dash-arch-inner">
+        <span class="dash-arch-icon">⚡</span>
+        <div>
+          <strong>Architecture</strong>
+          <p>Survey form → Azure Static Web App → Azure Function (Node.js) → Cosmos DB (NoSQL) → Azure Function aggregation → Chart.js dashboard</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <span>© 2025 Sky Forged Labs · Home Lab Project</span>
+    <a href="privacy.html">Privacy</a>
+  </footer>
+
+  <script>
+    // ── Config ───────────────────────────────────────────────
+    const STATS_ENDPOINT = "https://officesurveyappfunctions-auhgezd0ggauctg9.eastus-01.azurewebsites.net/api/stats";
+
+    // ── Chart.js global defaults to match site theme ─────────
+    Chart.defaults.color          = "#7a8499";
+    Chart.defaults.borderColor    = "rgba(255,255,255,0.08)";
+    Chart.defaults.font.family    = "'DM Sans', system-ui, sans-serif";
+    Chart.defaults.font.size      = 13;
+
+    const ACCENT      = "#f5a623";
+    const ACCENT2     = "#4fc3f7";
+    const ACCENT3     = "#4ade80";
+    const ACCENT4     = "#f472b6";
+    const SURFACE2    = "#1e2535";
+    const MUTED       = "#7a8499";
+
+    // Palette cycling for bar charts
+    const BAR_COLORS  = [ACCENT, ACCENT2, ACCENT3, ACCENT4, "#a78bfa", "#fb923c"];
+
+    // Doughnut palette
+    const DONUT_COLORS = [ACCENT, ACCENT2, ACCENT3, ACCENT4];
+
+    // ── Helpers ──────────────────────────────────────────────
+    function shortTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function makeBarChart(canvasId, labels, data) {
+      const ctx = document.getElementById(canvasId).getContext("2d");
+      return new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: BAR_COLORS.slice(0, labels.length),
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.parsed.x} response${ctx.parsed.x !== 1 ? "s" : ""}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: "rgba(255,255,255,0.05)" },
+              ticks: { precision: 0 }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: "#e8ecf4" }
+            }
+          }
+        }
+      });
+    }
+
+    function makeDonutChart(canvasId, labels, data) {
+      const ctx = document.getElementById(canvasId).getContext("2d");
+      return new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: DONUT_COLORS,
+            borderColor: "#161b26",
+            borderWidth: 3,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "65%",
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                padding: 16,
+                usePointStyle: true,
+                pointStyle: "circle",
+                color: "#e8ecf4"
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.label}: ${ctx.parsed} response${ctx.parsed !== 1 ? "s" : ""}`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function makeLineChart(canvasId, labels, data) {
+      const ctx = document.getElementById(canvasId).getContext("2d");
+
+      // Gradient fill under the line
+      const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+      gradient.addColorStop(0,   "rgba(245,166,35,0.3)");
+      gradient.addColorStop(1,   "rgba(245,166,35,0.0)");
+
+      return new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Submissions",
+            data,
+            borderColor:     ACCENT,
+            backgroundColor: gradient,
+            borderWidth:     2,
+            pointRadius:     4,
+            pointBackgroundColor: ACCENT,
+            fill: true,
+            tension: 0.35
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.parsed.y} submission${ctx.parsed.y !== 1 ? "s" : ""}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: "rgba(255,255,255,0.05)" },
+              ticks: { color: MUTED }
+            },
+            y: {
+              grid: { color: "rgba(255,255,255,0.05)" },
+              ticks: { precision: 0, color: MUTED }
+            }
+          }
+        }
+      });
+    }
+
+    // ── Main fetch + render ──────────────────────────────────
+    async function loadStats() {
+      document.getElementById("loadingState").style.display = "flex";
+      document.getElementById("errorState").style.display   = "none";
+      document.getElementById("chartsGrid").style.display   = "none";
+      document.getElementById("archCallout").style.display  = "none";
+
+      try {
+        const res  = await fetch(STATS_ENDPOINT);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "API error");
+
+        // Meta bar
+        document.getElementById("totalCount").textContent   = data.totalResponses;
+        document.getElementById("lastUpdated").textContent  = shortTime(data.generatedAt);
+
+        // Helper to extract labels + counts for a given question id
+        function qData(id) {
+          const q = data.questions.find(q => q.id === id);
+          if (!q) return { labels: [], counts: [] };
+          return {
+            labels: q.options,
+            counts: q.options.map(o => q.counts[o] || 0)
+          };
+        }
+
+        // ── Render each chart ──
+        // Time series (line)
+        if (data.timeSeries && data.timeSeries.length > 0) {
+          makeLineChart(
+            "chart-timeseries",
+            data.timeSeries.map(d => d.date),
+            data.timeSeries.map(d => d.count)
+          );
+        } else {
+          // No submissions yet — show a placeholder message in the canvas area
+          document.getElementById("chart-timeseries").closest(".dash-card").querySelector(".dash-chart-wrap").innerHTML =
+            '<p class="dash-empty">No submissions yet — check back soon!</p>';
+        }
+
+        // Doughnut charts
+        const q1 = qData("q1");
+        makeDonutChart("chart-q1", q1.labels, q1.counts);
+
+        const q8 = qData("q8");
+        makeDonutChart("chart-q8", q8.labels, q8.counts);
+
+        // Bar charts (horizontal)
+        ["q2","q3","q4","q5","q6","q7","q9","q10"].forEach(id => {
+          const { labels, counts } = qData(id);
+          makeBarChart(`chart-${id}`, labels, counts);
+        });
+
+        // Show grid + arch callout
+        document.getElementById("loadingState").style.display  = "none";
+        document.getElementById("chartsGrid").style.display    = "grid";
+        document.getElementById("archCallout").style.display   = "block";
+
+      } catch (err) {
+        console.error("Dashboard load error:", err);
+        document.getElementById("loadingState").style.display  = "none";
+        document.getElementById("errorState").style.display    = "flex";
+        document.getElementById("errorMessage").textContent    = `Could not load data: ${err.message}`;
+      }
+    }
+
+    // ── Init ─────────────────────────────────────────────────
+    loadStats();
+  </script>
+
+</body>
+</html>

@@ -735,3 +735,221 @@ body > *:not(.bg-grid) { position: relative; z-index: 1; }
   .question-card { padding: 1.75rem 1.25rem; }
   .q-text { font-size: 1.2rem; }
 }
+
+/* ============================================================
+   DASHBOARD PAGE
+   ============================================================ */
+
+.dash-main {
+  flex: 1;
+  padding: 3rem 2.5rem 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Page header ── */
+.dash-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.dash-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 0.6rem;
+}
+
+.dash-subtitle {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+  max-width: 560px;
+}
+
+/* ── Meta box ── */
+.dash-meta-box {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.75rem;
+  flex-shrink: 0;
+}
+
+.dash-meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.dash-meta-value {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.dash-meta-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dash-meta-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+}
+
+/* ── Loading / error states ── */
+.dash-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.dash-state--error { color: #f87171; }
+.dash-state-icon   { font-size: 2rem; }
+
+.dash-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Charts grid ── */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.dash-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  animation: cardIn 0.4s ease both;
+}
+
+/* Wide card spans both columns */
+.dash-card--wide {
+  grid-column: 1 / -1;
+}
+
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.dash-card-label {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dash-card-type {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+}
+
+.dash-chart-wrap {
+  position: relative;
+  height: 220px;
+}
+
+.dash-chart-wrap--sm {
+  height: 260px;
+}
+
+.dash-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* ── Architecture callout ── */
+.dash-arch {
+  margin-top: 2rem;
+}
+
+.dash-arch-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.dash-arch-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.dash-arch-inner strong {
+  display: block;
+  color: var(--text);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+/* ── Dashboard responsive ── */
+@media (max-width: 860px) {
+  .dash-main        { padding: 2rem 1.5rem 3rem; }
+  .dash-page-header { flex-direction: column; }
+  .dash-meta-box    { width: 100%; justify-content: center; }
+  .dash-grid        { grid-template-columns: 1fr; }
+  .dash-card--wide  { grid-column: 1; }
+}
+
+@media (max-width: 480px) {
+  .dash-chart-wrap    { height: 180px; }
+  .dash-chart-wrap--sm{ height: 220px; }
+}
