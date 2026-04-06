@@ -72,20 +72,24 @@ body > *:not(.bg-grid) { position: relative; z-index: 1; }
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.3rem;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+  text-decoration: none;
   flex-shrink: 0;
 }
 
-.logo-icon {
-  color: var(--accent);
-  font-size: 1.45rem;
-  flex-shrink: 0;
+.logo-img {
+  height: 44px;
+  width: auto;
+  display: block;
+  transition: opacity var(--transition);
 }
+
+.logo:hover .logo-img {
+  opacity: 0.85;
+}
+
+/* Legacy spans — kept for safety, hidden if logo-img is present */
+.logo-icon,
+.logo-text { display: none; }
 
 .site-nav {
   display: flex;
