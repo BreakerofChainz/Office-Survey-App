@@ -1,5 +1,5 @@
 /**
- * OfficePulse – survey.js
+ * Sky Forged Labs – survey.js
  * Handles all survey logic, state, and submission to Azure Functions → Cosmos DB.
  */
 
@@ -126,6 +126,7 @@ const qText           = document.getElementById("qText");
 const optionsGrid     = document.getElementById("optionsGrid");
 const submitBtn       = document.getElementById("submitBtn");
 const submitLabel     = document.getElementById("submitLabel");
+const backBtn         = document.getElementById("backBtn");
 const progressHeader  = document.getElementById("progressHeader");
 const questionCard    = document.getElementById("questionCard");
 const thankyouCard    = document.getElementById("thankyouCard");
@@ -147,16 +148,29 @@ function renderQuestion(index) {
 
   // Update submit button label
   submitLabel.textContent = index < QUESTIONS.length - 1 ? "Next Question" : "Submit Survey";
-  submitBtn.disabled = true;
+
+  // Show/hide back button
+  backBtn.style.display = index > 0 ? "inline-flex" : "none";
 
   // Rebuild options
   optionsGrid.innerHTML = "";
+  const savedAnswer = answers[q.id] || null;
+
   q.options.forEach(opt => {
     const btn = document.createElement("button");
     btn.className = "option-btn";
     btn.setAttribute("aria-label", opt);
     btn.setAttribute("role", "radio");
-    btn.setAttribute("aria-checked", "false");
+
+    const isSelected = opt === savedAnswer;
+    if (isSelected) {
+      btn.classList.add("selected");
+      btn.setAttribute("aria-checked", "true");
+      selectedOption = opt;
+    } else {
+      btn.setAttribute("aria-checked", "false");
+    }
+
     btn.innerHTML = `
       <span class="option-indicator"></span>
       <span class="option-text">${opt}</span>
@@ -164,6 +178,9 @@ function renderQuestion(index) {
     btn.addEventListener("click", () => selectOption(btn, opt));
     optionsGrid.appendChild(btn);
   });
+
+  // Enable Next/Submit if a prior answer exists for this question
+  submitBtn.disabled = !savedAnswer;
 
   // Animate card in
   questionCard.style.animation = "none";
@@ -199,7 +216,18 @@ submitBtn.addEventListener("click", () => {
   }
 });
 
-// ── Build Payload ────────────────────────────────────────────
+// ── Back Button ───────────────────────────────────────────────
+backBtn.addEventListener("click", () => {
+  if (currentIndex <= 0) return;
+
+  // Save current selection before going back (even if none chosen)
+  if (selectedOption) {
+    answers[QUESTIONS[currentIndex].id] = selectedOption;
+  }
+
+  currentIndex--;
+  renderQuestion(currentIndex);
+});
 function buildPayload() {
   const answersFormatted = {};
   QUESTIONS.forEach(q => {
@@ -213,7 +241,7 @@ function buildPayload() {
     id:            generateUUID(),
     surveyVersion: "1.0",
     submittedAt:   new Date().toISOString(),
-    source:        "OfficePulse-WebApp",
+    source:        "SkyForgedLabs-WebApp",
     answers:       answersFormatted
   };
 }
