@@ -628,6 +628,94 @@ body > *:not(.bg-grid) { position: relative; z-index: 1; }
 }
 
 /* ============================================================
+   HAMBURGER MENU
+   ============================================================ */
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  z-index: 200;
+}
+
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+.hamburger.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.mobile-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 199;
+  min-width: 160px;
+  animation: dropIn 0.2s ease both;
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.mobile-dropdown.open {
+  display: block;
+}
+
+.mobile-dropdown a {
+  display: block;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.mobile-dropdown a:last-child {
+  border-bottom: none;
+}
+
+.mobile-dropdown a:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.mobile-dropdown a.active {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 
@@ -642,6 +730,7 @@ body > *:not(.bg-grid) { position: relative; z-index: 1; }
 
 @media (max-width: 480px) {
   .site-nav { display: none; }
+  .hamburger { display: flex; }
   .question-card { padding: 1.75rem 1.25rem; }
   .q-text { font-size: 1.2rem; }
 }
