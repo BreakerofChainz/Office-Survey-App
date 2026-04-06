@@ -1,0 +1,15 @@
+# Node dependencies – never commit these
+node_modules/
+API/node_modules/
+
+# Azure Functions local settings (contains secrets)
+local.settings.json
+API/local.settings.json
+
+# OS clutter
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/

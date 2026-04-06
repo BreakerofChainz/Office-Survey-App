@@ -1,9 +1,14 @@
 /**
  * OfficePulse – survey.js
- * Handles all survey logic, state, and Cosmos DB-ready submission formatting.
+ * Handles all survey logic, state, and submission to Azure Functions → Cosmos DB.
  */
 
-// ── Questions Data ──────────────────────────────────────────
+// ── Azure Function endpoint ──────────────────────────────────
+// This points to your deployed Azure Function App.
+// If you ever redeploy to a different URL, update this one line.
+const API_ENDPOINT = "https://officesurveyappfunctions-auhgezd0ggauctg9.eastus-01.azurewebsites.net/api/submit";
+
+// ── Questions Data ───────────────────────────────────────────
 const QUESTIONS = [
   {
     id: "q1",
@@ -108,12 +113,12 @@ const QUESTIONS = [
   }
 ];
 
-// ── State ───────────────────────────────────────────────────
-let currentIndex = 0;
+// ── State ────────────────────────────────────────────────────
+let currentIndex  = 0;
 let selectedOption = null;
-const answers = {};
+const answers     = {};
 
-// ── DOM Refs ────────────────────────────────────────────────
+// ── DOM Refs ─────────────────────────────────────────────────
 const questionCounter = document.getElementById("questionCounter");
 const progressFill    = document.getElementById("progressFill");
 const qNumber         = document.getElementById("qNumber");
@@ -126,7 +131,7 @@ const questionCard    = document.getElementById("questionCard");
 const thankyouCard    = document.getElementById("thankyouCard");
 const tySummary       = document.getElementById("tySummary");
 
-// ── Render Question ─────────────────────────────────────────
+// ── Render Question ──────────────────────────────────────────
 function renderQuestion(index) {
   const q = QUESTIONS[index];
   selectedOption = null;
@@ -134,7 +139,7 @@ function renderQuestion(index) {
   // Update progress
   const progress = Math.round(((index + 1) / QUESTIONS.length) * 100);
   questionCounter.textContent = `Question ${index + 1} of ${QUESTIONS.length}`;
-  progressFill.style.width = `${progress}%`;
+  progressFill.style.width    = `${progress}%`;
 
   // Update question text
   qNumber.textContent = String(index + 1).padStart(2, "0");
@@ -146,7 +151,7 @@ function renderQuestion(index) {
 
   // Rebuild options
   optionsGrid.innerHTML = "";
-  q.options.forEach((opt, i) => {
+  q.options.forEach(opt => {
     const btn = document.createElement("button");
     btn.className = "option-btn";
     btn.setAttribute("aria-label", opt);
@@ -162,26 +167,23 @@ function renderQuestion(index) {
 
   // Animate card in
   questionCard.style.animation = "none";
-  void questionCard.offsetHeight; // reflow
+  void questionCard.offsetHeight; // force reflow
   questionCard.style.animation = "cardIn 0.35s ease both";
 }
 
-// ── Select Option ───────────────────────────────────────────
+// ── Select Option ────────────────────────────────────────────
 function selectOption(btn, value) {
-  // Deselect all
   document.querySelectorAll(".option-btn").forEach(b => {
     b.classList.remove("selected");
     b.setAttribute("aria-checked", "false");
   });
-
-  // Select clicked
   btn.classList.add("selected");
   btn.setAttribute("aria-checked", "true");
   selectedOption = value;
   submitBtn.disabled = false;
 }
 
-// ── Submit / Advance ────────────────────────────────────────
+// ── Submit / Advance ─────────────────────────────────────────
 submitBtn.addEventListener("click", () => {
   if (!selectedOption) return;
 
@@ -197,78 +199,81 @@ submitBtn.addEventListener("click", () => {
   }
 });
 
-// ── Build Cosmos DB-Ready Payload ───────────────────────────
+// ── Build Payload ────────────────────────────────────────────
 function buildPayload() {
+  const answersFormatted = {};
+  QUESTIONS.forEach(q => {
+    answersFormatted[q.id] = {
+      question: q.text,
+      response: answers[q.id] || null
+    };
+  });
+
   return {
-    id: generateUUID(),
+    id:            generateUUID(),
     surveyVersion: "1.0",
-    submittedAt: new Date().toISOString(),
-    source: "OfficePulse-WebApp",
-    answers: {
-      q1:  { question: QUESTIONS[0].text, response: answers.q1  || null },
-      q2:  { question: QUESTIONS[1].text, response: answers.q2  || null },
-      q3:  { question: QUESTIONS[2].text, response: answers.q3  || null },
-      q4:  { question: QUESTIONS[3].text, response: answers.q4  || null },
-      q5:  { question: QUESTIONS[4].text, response: answers.q5  || null },
-      q6:  { question: QUESTIONS[5].text, response: answers.q6  || null },
-      q7:  { question: QUESTIONS[6].text, response: answers.q7  || null },
-      q8:  { question: QUESTIONS[7].text, response: answers.q8  || null },
-      q9:  { question: QUESTIONS[8].text, response: answers.q9  || null },
-      q10: { question: QUESTIONS[9].text, response: answers.q10 || null }
-    }
+    submittedAt:   new Date().toISOString(),
+    source:        "OfficePulse-WebApp",
+    answers:       answersFormatted
   };
 }
 
-// ── Submit Survey ───────────────────────────────────────────
+// ── Submit Survey ────────────────────────────────────────────
 async function submitSurvey() {
   const payload = buildPayload();
-  console.log("Survey payload (Cosmos DB ready):", JSON.stringify(payload, null, 2));
 
-  /**
-   * ── TODO: Wire up Azure API ──────────────────────────────
-   * When your Azure Function / API Management endpoint is ready,
-   * uncomment and update the block below:
-   *
-   * const API_ENDPOINT = "https://<your-function>.azurewebsites.net/api/submitSurvey";
-   *
-   * try {
-   *   const response = await fetch(API_ENDPOINT, {
-   *     method: "POST",
-   *     headers: { "Content-Type": "application/json" },
-   *     body: JSON.stringify(payload)
-   *   });
-   *   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-   *   const result = await response.json();
-   *   console.log("Cosmos DB response:", result);
-   * } catch (err) {
-   *   console.error("Submission error:", err);
-   * }
-   * ────────────────────────────────────────────────────────
-   */
+  // Disable button and show loading state while we wait for the API
+  submitBtn.disabled  = true;
+  submitLabel.textContent = "Submitting…";
 
-  // Show thank-you screen
+  try {
+    const response = await fetch(API_ENDPOINT, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("Submission accepted, Cosmos ID:", result.id);
+
+  } catch (err) {
+    console.error("Submission failed:", err.message);
+    // Show a user-friendly error without blocking the thank-you screen.
+    // In a production app you would surface this in the UI.
+  }
+
+  // Always show thank-you screen regardless of API outcome
+  // so a transient network error doesn't strand the user.
+  showThankYou(payload);
+}
+
+// ── Thank-You Screen ─────────────────────────────────────────
+function showThankYou(payload) {
   progressHeader.style.display = "none";
   questionCard.style.display   = "none";
   thankyouCard.style.display   = "block";
 
-  // Build summary display
   const summaryItems = Object.entries(payload.answers)
-    .map(([key, val]) => `<strong>${val.question}</strong><br/>${val.response}`)
+    .map(([, val]) => `<strong>${val.question}</strong><br/>${val.response}`)
     .join("<br/><br/>");
   tySummary.innerHTML = summaryItems;
 }
 
-// ── UUID Generator ──────────────────────────────────────────
+// ── UUID Helper ───────────────────────────────────────────────
 function generateUUID() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  // Fallback
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
     const r = (Math.random() * 16) | 0;
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
 }
 
-// ── Init ─────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────
 renderQuestion(0);
