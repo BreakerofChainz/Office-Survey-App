@@ -11,7 +11,7 @@
   <div class="bg-grid"></div>
 
   <header class="site-header">
-    <a href="index.html" class="logo" aria-label="Sky Forged Labs – Home">
+    <a href="index.html" class="logo" aria-label="Sky Forged Labs - Home">
       <img src="Logo.png" alt="Sky Forged Labs" class="logo-img" />
     </a>
     <nav class="site-nav">
@@ -19,7 +19,31 @@
       <a href="survey.html" class="nav-link active">Survey</a>
       <a href="privacy.html" class="nav-link">Privacy</a>
     </nav>
+    <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-dropdown" id="mobileDropdown">
+      <a href="index.html">Home</a>
+      <a href="survey.html" class="active">Survey</a>
+      <a href="privacy.html">Privacy</a>
+    </div>
   </header>
+  <script>
+    const btn = document.getElementById('hamburger');
+    const menu = document.getElementById('mobileDropdown');
+    btn.addEventListener('click', () => {
+      const isOpen = menu.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+      btn.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove('open');
+        btn.classList.remove('open');
+        btn.setAttribute('aria-expanded', false);
+      }
+    });
+  </script>
 
   <main class="survey-main">
     <div class="survey-shell">
