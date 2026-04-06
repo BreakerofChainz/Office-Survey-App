@@ -19,7 +19,31 @@
       <a href="survey.html" class="nav-link">Survey</a>
       <a href="privacy.html" class="nav-link active">Privacy</a>
     </nav>
+    <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-dropdown" id="mobileDropdown">
+      <a href="index.html">Home</a>
+      <a href="survey.html">Survey</a>
+      <a href="privacy.html" class="active">Privacy</a>
+    </div>
   </header>
+  <script>
+    const btn = document.getElementById('hamburger');
+    const menu = document.getElementById('mobileDropdown');
+    btn.addEventListener('click', () => {
+      const isOpen = menu.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+      btn.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove('open');
+        btn.classList.remove('open');
+        btn.setAttribute('aria-expanded', false);
+      }
+    });
+  </script>
 
   <main class="privacy-main">
     <div class="privacy-container">
