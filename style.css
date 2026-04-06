@@ -66,7 +66,7 @@ body > *:not(.bg-grid) { position: relative; z-index: 1; }
   backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 9998;
 }
 
 .logo {
@@ -669,16 +669,17 @@ body > *:not(.bg-grid) { position: relative; z-index: 1; }
 
 .mobile-dropdown {
   display: none;
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 1.5rem;
+  position: fixed;
+  top: 0;
+  right: 0;
+  margin-top: 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 0 0 0 var(--radius);
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  z-index: 199;
-  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  z-index: 9999;
+  min-width: 180px;
   animation: dropIn 0.2s ease both;
 }
 
