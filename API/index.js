@@ -112,7 +112,7 @@ app.http("submit", {
       partition:     "responses",
       surveyVersion: body.surveyVersion || "1.0",
       submittedAt:   body.submittedAt   || new Date().toISOString(),
-      source:        body.source        || "OfficePulse-WebApp",
+      source:        body.source        || "SkyForgedLabs-WebApp",
       answers:       body.answers
     };
 
