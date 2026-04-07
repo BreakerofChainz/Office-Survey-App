@@ -10,7 +10,6 @@ resource "azurerm_storage_account" "function_storage" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 
-  # Match existing Azure settings to avoid in-place changes
   allow_nested_items_to_be_public = false
   default_to_oauth_authentication = true
 
@@ -42,38 +41,41 @@ resource "azurerm_linux_function_app" "main" {
   resource_group_name = data.azurerm_resource_group.main.name
   location            = data.azurerm_resource_group.main.location
 
+  service_plan_id = azurerm_service_plan.main.id
+
   storage_account_name       = azurerm_storage_account.function_storage.name
   storage_account_access_key = azurerm_storage_account.function_storage.primary_access_key
-  service_plan_id            = azurerm_service_plan.main.id
 
-  https_only                                     = true
+  https_only = true
+
   builtin_logging_enabled                        = false
   ftp_publish_basic_authentication_enabled       = false
   webdeploy_publish_basic_authentication_enabled = false
 
-  # Optional instead of Required to avoid breaking HTTP triggers
   client_certificate_mode = "Optional"
 
   identity {
     type = "SystemAssigned"
   }
 
-  # ── Function Runtime Settings (Flex Consumption compatible) ──
+  # ── Application Settings ──────────────────────────────────
   app_settings = {
+    FUNCTIONS_EXTENSION_VERSION = "~4"
+
     COSMOS_CONNECTION_STRING              = var.cosmos_connection_string
     ALLOWED_ORIGIN                        = var.allowed_origin
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.main.connection_string
     AI_LANGUAGE_ENDPOINT                  = azurerm_cognitive_account.language.endpoint
     AI_LANGUAGE_KEY                       = azurerm_cognitive_account.language.primary_access_key
     LOGIC_APP_WEBHOOK_URL                 = ""
+    DEPLOYMENT_STORAGE_CONNECTION_STRING = azurerm_storage_account.function_storage.primary_connection_string
 
-    WEBSITE_RUN_FROM_PACKAGE     = "1"
   }
 
+  # ── Site Config ───────────────────────────────────────────
   site_config {
     ftps_state = "FtpsOnly"
 
-    # Preserve all existing CORS origins plus managed ones
     cors {
       allowed_origins = [
         "https://skyforgedlabs.com",

@@ -1,10 +1,21 @@
-
 # Node dependencies
 node_modules/
 API/node_modules/
 
-# Terraform secrets
+# Terraform secrets and state — NEVER commit these
 terraform/terraform.tfvars
 terraform/.terraform/
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
+terraform/.terraform.lock.hcl
+terraform/crash.log
+terraform/crash.*.log
+terraform/override.tf
+terraform/override.tf.json
+
+# Deployment artifacts
+deploy.zip
+
+# OS junk
+.DS_Store
+Thumbs.db
