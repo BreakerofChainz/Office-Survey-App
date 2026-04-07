@@ -21,10 +21,18 @@ resource "azurerm_logic_app_workflow" "digest" {
   # Workflow parameters are empty here — configured via portal designer
   parameters = {}
 
+  lifecycle {
+  ignore_changes = [
+    parameters,
+    workflow_parameters
+  ]
+    }
+    
   tags = {
     project     = "SkyForgedLabs"
     environment = "homelab"
     managed_by  = "terraform"
     note        = "workflow-configured-in-portal"
+
   }
 }

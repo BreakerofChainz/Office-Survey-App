@@ -140,7 +140,7 @@ app.http("submit", {
         jsonBody: { ok: true, id: document.id }
       };
     } catch (err) {
-      context.log.error("Cosmos DB write failed:", err.message);
+      context.error("Cosmos DB write failed:", err.message);
       return {
         status: 500,
         headers: corsHeaders(),
@@ -270,7 +270,7 @@ app.http("stats", {
       };
 
     } catch (err) {
-      context.log.error("Stats query failed:", err.message);
+      context.error("Stats query failed:", err.message);
       return {
         status: 500,
         headers: corsHeaders(),
@@ -293,7 +293,7 @@ app.timer("dailyDigest", {
 
     const webhookUrl = process.env.LOGIC_APP_WEBHOOK_URL;
     if (!webhookUrl) {
-      context.log.error("LOGIC_APP_WEBHOOK_URL is not set — digest aborted.");
+      context.error("LOGIC_APP_WEBHOOK_URL is not set — digest aborted.");
       return;
     }
 
@@ -335,13 +335,13 @@ app.timer("dailyDigest", {
       });
 
       if (!response.ok) {
-        context.log.error(`Logic App webhook failed: ${response.status} ${response.statusText}`);
+        context.error(`Logic App webhook failed: ${response.status} ${response.statusText}`);
       } else {
         context.log("Daily digest sent successfully.");
       }
 
     } catch (err) {
-      context.log.error("Daily digest error:", err.message);
+      context.error("Daily digest error:", err.message);
     }
   }
 });
