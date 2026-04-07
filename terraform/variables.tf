@@ -103,3 +103,9 @@ variable "allowed_origin" {
   type        = string
   default     = "https://skyforgedlabs.com"
 }
+
+variable "logic_app_webhook_url" {
+  description = "Logic App HTTP trigger webhook URL for daily digest"
+  type        = string
+  sensitive   = true
+}

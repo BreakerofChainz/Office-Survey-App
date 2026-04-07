@@ -67,8 +67,8 @@ resource "azurerm_linux_function_app" "main" {
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.main.connection_string
     AI_LANGUAGE_ENDPOINT                  = azurerm_cognitive_account.language.endpoint
     AI_LANGUAGE_KEY                       = azurerm_cognitive_account.language.primary_access_key
-    LOGIC_APP_WEBHOOK_URL                 = ""
-    DEPLOYMENT_STORAGE_CONNECTION_STRING = azurerm_storage_account.function_storage.primary_connection_string
+    LOGIC_APP_WEBHOOK_URL                 = var.logic_app_webhook_url
+    DEPLOYMENT_STORAGE_CONNECTION_STRING  = azurerm_storage_account.function_storage.primary_connection_string
 
   }
 
