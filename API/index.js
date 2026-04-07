@@ -279,3 +279,69 @@ app.http("stats", {
     }
   }
 });
+
+// ── Timer: Daily Digest ─────────────────────────────────────
+// Fires every day at 11:59 PM Eastern (04:59 UTC).
+// Queries Cosmos for today's count and all-time count,
+// then POSTs the data to the Logic App webhook which sends
+// the daily digest email via Gmail.
+//
+// LOGIC_APP_WEBHOOK_URL must be set in Application Settings.
+app.timer("dailyDigest", {
+  schedule: "0 59 4 * * *",   // 04:59 UTC = 11:59 PM Eastern (EST)
+  handler: async (myTimer, context) => {
+
+    const webhookUrl = process.env.LOGIC_APP_WEBHOOK_URL;
+    if (!webhookUrl) {
+      context.log.error("LOGIC_APP_WEBHOOK_URL is not set — digest aborted.");
+      return;
+    }
+
+    // Today's date in YYYY-MM-DD (UTC)
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+
+    // Start of today UTC
+    const startOfDay = new Date(todayStr);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    try {
+      // Query today's responses
+      const { resources: todayDocs } = await container.items
+        .query({
+          query: "SELECT c.id FROM c WHERE c.submittedAt >= @since",
+          parameters: [{ name: "@since", value: startOfDay.toISOString() }]
+        })
+        .fetchAll();
+
+      // Query all-time count
+      const { resources: allDocs } = await container.items
+        .query("SELECT c.id FROM c")
+        .fetchAll();
+
+      const payload = {
+        date:         todayStr,
+        todayCount:   todayDocs.length,
+        allTimeCount: allDocs.length
+      };
+
+      context.log(`Digest payload: ${JSON.stringify(payload)}`);
+
+      // POST to Logic App webhook
+      const response = await fetch(webhookUrl, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        context.log.error(`Logic App webhook failed: ${response.status} ${response.statusText}`);
+      } else {
+        context.log("Daily digest sent successfully.");
+      }
+
+    } catch (err) {
+      context.log.error("Daily digest error:", err.message);
+    }
+  }
+});
