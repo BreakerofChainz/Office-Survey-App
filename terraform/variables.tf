@@ -32,7 +32,7 @@ variable "resource_group_name" {
   default     = "Office-Survey-App"
 }
 
-# ── Existing resource names (for import) ────────────────────
+# ── Existing resource names (imported into Terraform state) ──
 
 variable "cosmos_account_name" {
   description = "Existing Cosmos DB account name"
@@ -61,7 +61,7 @@ variable "static_web_app_name" {
 # ── New resource names ───────────────────────────────────────
 
 variable "key_vault_name" {
-  description = "Name for the new Key Vault (must be globally unique, 3-24 chars)"
+  description = "Name for the new Key Vault (globally unique, 3-24 chars)"
   type        = string
   default     = "skyforgedlabs-kv"
 }
@@ -90,16 +90,16 @@ variable "logic_app_name" {
   default     = "skyforgedlabs-digest"
 }
 
-# ── Sensitive values — supply in terraform.tfvars ───────────
+# ── Sensitive values — supply in terraform.tfvars only ───────
 
 variable "cosmos_connection_string" {
-  description = "Cosmos DB primary connection string — stored in Key Vault, never in state directly"
+  description = "Cosmos DB primary connection string — passed directly as a Function App env var"
   type        = string
   sensitive   = true
 }
 
 variable "allowed_origin" {
-  description = "CORS origin for the Function App API"
+  description = "CORS allowed origin for the Function App API"
   type        = string
   default     = "https://skyforgedlabs.com"
 }

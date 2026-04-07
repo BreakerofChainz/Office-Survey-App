@@ -4,13 +4,8 @@
 # Use these to verify resources and configure dependent systems.
 # ============================================================
 
-output "key_vault_uri" {
-  description = "Key Vault URI — set as KEYVAULT_URI in Function App (already done via app_settings)"
-  value       = azurerm_key_vault.main.vault_uri
-}
-
 output "app_insights_connection_string" {
-  description = "App Insights connection string — already wired into Function App app_settings"
+  description = "App Insights connection string — wired into Function App app_settings"
   value       = azurerm_application_insights.main.connection_string
   sensitive   = true
 }
@@ -22,13 +17,14 @@ output "app_insights_instrumentation_key" {
 }
 
 output "language_endpoint" {
-  description = "Azure AI Language endpoint — already wired into Function App app_settings"
+  description = "Azure AI Language endpoint — wired into Function App app_settings"
   value       = azurerm_cognitive_account.language.endpoint
 }
 
 output "function_app_managed_identity_principal_id" {
   description = "Object ID of the Function App's system-assigned Managed Identity"
-  value       = azurerm_linux_function_app.main.identity[0].principal_id
+  # Use try() to safely handle the case where identity has not yet been assigned
+  value = try(azurerm_linux_function_app.main.identity[0].principal_id, "not-yet-assigned")
 }
 
 output "function_app_default_hostname" {

@@ -1,20 +1,6 @@
 # ============================================================
 # Sky Forged Labs — cosmos.tf
-# Imports the existing Cosmos DB account, database, and
-# containers into Terraform state so they are fully managed.
-#
-# BEFORE running terraform apply, run:
-#   terraform import azurerm_cosmosdb_account.main \
-#     /subscriptions/ad84afe2-81ec-4d5a-946b-31c3236c351f/resourceGroups/Office-Survey-App/providers/Microsoft.DocumentDB/databaseAccounts/officesurveyswa
-#
-#   terraform import azurerm_cosmosdb_sql_database.surveydb \
-#     /subscriptions/ad84afe2-81ec-4d5a-946b-31c3236c351f/resourceGroups/Office-Survey-App/providers/Microsoft.DocumentDB/databaseAccounts/officesurveyswa/sqlDatabases/surveydb
-#
-#   terraform import azurerm_cosmosdb_sql_container.responses \
-#     /subscriptions/ad84afe2-81ec-4d5a-946b-31c3236c351f/resourceGroups/Office-Survey-App/providers/Microsoft.DocumentDB/databaseAccounts/officesurveyswa/sqlDatabases/surveydb/containers/responses
-#
-#   terraform import azurerm_cosmosdb_sql_container.insights \
-#     /subscriptions/ad84afe2-81ec-4d5a-946b-31c3236c351f/resourceGroups/Office-Survey-App/providers/Microsoft.DocumentDB/databaseAccounts/officesurveyswa/sqlDatabases/surveydb/containers/insights
+# Manages the existing Cosmos DB account, database, and containers.
 # ============================================================
 
 resource "azurerm_cosmosdb_account" "main" {
@@ -24,8 +10,11 @@ resource "azurerm_cosmosdb_account" "main" {
   offer_type          = "Standard"
   kind                = "GlobalDocumentDB"
 
-  # Free tier — 1000 RU/s and 25 GB free per subscription
-  enable_free_tier = true
+  # free_tier_enabled is false — the existing account was not created
+  # with free tier. Changing this forces a destroy/replace, which would
+  # wipe all survey data. Leave as false to match the actual Azure state.
+  free_tier_enabled          = false
+  automatic_failover_enabled = true
 
   consistency_policy {
     consistency_level = "Session"
@@ -40,7 +29,6 @@ resource "azurerm_cosmosdb_account" "main" {
     name = "EnableServerless"
   }
 
-  # Disable public network access is optional — leave open for home lab
   is_virtual_network_filter_enabled = false
 }
 
@@ -51,14 +39,13 @@ resource "azurerm_cosmosdb_sql_database" "surveydb" {
 }
 
 resource "azurerm_cosmosdb_sql_container" "responses" {
-  name                = "responses"
-  resource_group_name = data.azurerm_resource_group.main.name
-  account_name        = azurerm_cosmosdb_account.main.name
-  database_name       = azurerm_cosmosdb_sql_database.surveydb.name
-  partition_key_path  = "/partition"
-
-  # Serverless containers do not support throughput settings —
-  # omit the throughput block entirely when using EnableServerless.
+  name                  = "responses"
+  resource_group_name   = data.azurerm_resource_group.main.name
+  account_name          = azurerm_cosmosdb_account.main.name
+  database_name         = azurerm_cosmosdb_sql_database.surveydb.name
+  partition_key_paths   = ["/partition"]
+  # Must match the version Azure created — changing this forces destroy/replace
+  partition_key_version = 2
 }
 
 resource "azurerm_cosmosdb_sql_container" "insights" {
@@ -66,5 +53,5 @@ resource "azurerm_cosmosdb_sql_container" "insights" {
   resource_group_name = data.azurerm_resource_group.main.name
   account_name        = azurerm_cosmosdb_account.main.name
   database_name       = azurerm_cosmosdb_sql_database.surveydb.name
-  partition_key_path  = "/partition"
+  partition_key_paths = ["/partition"]
 }

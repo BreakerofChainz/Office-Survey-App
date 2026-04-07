@@ -12,13 +12,8 @@ resource "azurerm_key_vault" "main" {
   tenant_id           = var.tenant_id
   sku_name            = "standard"
 
-  # Soft delete is enabled by default (90-day recovery window).
-  # purge_protection prevents permanent deletion even by admins.
-  # Set to false for a home lab so you can fully clean up with terraform destroy.
-  purge_protection_enabled = false
-
-  # Enable RBAC authorization — cleaner than legacy access policies
-  enable_rbac_authorization = true
+  purge_protection_enabled   = false
+  rbac_authorization_enabled = true
 
   tags = {
     project     = "SkyForgedLabs"
@@ -28,9 +23,6 @@ resource "azurerm_key_vault" "main" {
 }
 
 # ── Store the Cosmos connection string as a secret ───────────
-# The value comes from terraform.tfvars and is marked sensitive.
-# It will appear in terraform state — this is unavoidable with
-# local state. For production, use remote state with encryption.
 resource "azurerm_key_vault_secret" "cosmos_connection_string" {
   name         = "CosmosConnectionString"
   value        = var.cosmos_connection_string
@@ -41,8 +33,7 @@ resource "azurerm_key_vault_secret" "cosmos_connection_string" {
   ]
 }
 
-# ── RBAC: your admin account gets Key Vault Officer ──────────
-# This lets you read, write, and manage secrets via the portal.
+# ── RBAC: admin account gets Key Vault Secrets Officer ───────
 resource "azurerm_role_assignment" "admin_kv_officer" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets Officer"
@@ -50,14 +41,17 @@ resource "azurerm_role_assignment" "admin_kv_officer" {
 }
 
 # ── RBAC: Function App Managed Identity gets Secrets User ────
-# Secrets User = read-only access to secret values.
-# The identity is enabled in functions.tf — we reference it here.
-resource "azurerm_role_assignment" "function_kv_secrets_user" {
-  scope                = azurerm_key_vault.main.id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = azurerm_linux_function_app.main.identity[0].principal_id
-
-  depends_on = [
-    azurerm_linux_function_app.main,
-  ]
-}
+# This role assignment is created after terraform apply assigns
+# the Managed Identity to the Function App. It depends on the
+# identity being present. We use a separate apply pass for this.
+# Commented out until after first apply completes successfully.
+#
+# resource "azurerm_role_assignment" "function_kv_secrets_user" {
+#   scope                = azurerm_key_vault.main.id
+#   role_definition_name = "Key Vault Secrets User"
+#   principal_id         = azurerm_linux_function_app.main.identity[0].principal_id
+#
+#   depends_on = [
+#     azurerm_linux_function_app.main,
+#   ]
+# }
