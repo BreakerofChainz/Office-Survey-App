@@ -151,9 +151,15 @@ app.http("submit", {
 });
 
 // ── GET /api/stats ──────────────────────────────────────────
-// Reads all documents from Cosmos DB and returns aggregated
+// Reads documents from Cosmos DB and returns aggregated
 // response counts per question per answer option.
 // The dashboard page calls this endpoint to render Chart.js charts.
+//
+// Optional query parameter:
+//   ?since=YYYY-MM-DD  — filters results to documents submitted on
+//                        or after the given date (UTC). The Logic App
+//                        digest calls this with today's date to get
+//                        the daily count and breakdown.
 app.http("stats", {
   methods: ["GET", "OPTIONS"],
   authLevel: "anonymous",
@@ -165,12 +171,38 @@ app.http("stats", {
       return { status: 204, headers: corsHeaders() };
     }
 
+    // Parse optional ?since= query parameter
+    // Expected format: YYYY-MM-DD (e.g. 2026-04-07)
+    const sinceParam = request.query.get("since");
+    let sinceDate = null;
+    if (sinceParam) {
+      sinceDate = new Date(sinceParam);
+      if (isNaN(sinceDate.getTime())) {
+        return {
+          status: 400,
+          headers: corsHeaders(),
+          jsonBody: { ok: false, error: "Invalid 'since' date format. Use YYYY-MM-DD." }
+        };
+      }
+      // Set to start of day UTC
+      sinceDate.setUTCHours(0, 0, 0, 0);
+    }
+
     try {
-      // Fetch all survey response documents.
-      // For a small home-lab dataset this is fine.
-      // If the dataset grows large, switch to a GROUP BY SQL query.
+      // Fetch documents — filter by date if ?since= was provided
+      let query;
+      if (sinceDate) {
+        query = {
+          query: "SELECT c.answers, c.submittedAt FROM c WHERE c.submittedAt >= @since",
+          parameters: [{ name: "@since", value: sinceDate.toISOString() }]
+        };
+        context.log(`Stats filtered since: ${sinceDate.toISOString()}`);
+      } else {
+        query = "SELECT c.answers, c.submittedAt FROM c";
+      }
+
       const { resources: docs } = await container.items
-        .query("SELECT c.answers, c.submittedAt FROM c")
+        .query(query)
         .fetchAll();
 
       const totalResponses = docs.length;
@@ -222,7 +254,7 @@ app.http("stats", {
         counts:  counts[qid]
       }));
 
-      context.log(`Stats served: ${totalResponses} responses`);
+      context.log(`Stats served: ${totalResponses} responses${sinceDate ? ` (filtered since ${sinceDate.toISOString()})` : ""}`);
 
       return {
         status: 200,
@@ -231,6 +263,7 @@ app.http("stats", {
           ok:             true,
           totalResponses,
           generatedAt:    new Date().toISOString(),
+          filteredSince:  sinceDate ? sinceDate.toISOString().slice(0, 10) : null,
           questions,
           timeSeries
         }
