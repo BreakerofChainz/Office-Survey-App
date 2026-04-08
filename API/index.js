@@ -173,8 +173,7 @@ function buildSummaryInput(topThree, totalResponses) {
     })
     .filter(Boolean);
 
-  return `This office culture survey has received ${totalResponses} total responses. ` +
-    `Most respondents ${phrases[0]}, ${phrases[1]}, and ${phrases[2]}.`;
+  return `Most respondents ${phrases[0]}, ${phrases[1]}, and ${phrases[2]}.`;
 }
 
 // ── Azure AI Language Summarization ─────────────────────────
