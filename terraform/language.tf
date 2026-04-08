@@ -14,9 +14,14 @@ resource "azurerm_cognitive_account" "language" {
   kind                = "TextAnalytics"
   sku_name            = "F0"
 
-  # Required for custom text classification storage binding
   identity {
     type = "SystemAssigned"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      storage
+    ]
   }
 
   tags = {

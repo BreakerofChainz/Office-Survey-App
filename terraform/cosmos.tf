@@ -44,8 +44,30 @@ resource "azurerm_cosmosdb_sql_container" "responses" {
   account_name          = azurerm_cosmosdb_account.main.name
   database_name         = azurerm_cosmosdb_sql_database.surveydb.name
   partition_key_paths   = ["/partition"]
-  # Must match the version Azure created — changing this forces destroy/replace
   partition_key_version = 2
+
+  indexing_policy {
+    indexing_mode = "consistent"
+
+    included_path {
+      path = "/*"
+    }
+
+    excluded_path {
+      path = "/\"_etag\"/?"
+    }
+
+    composite_index {
+      index {
+        path  = "/submittedAt"
+        order = "descending"
+      }
+      index {
+        path  = "/partition"
+        order = "ascending"
+      }
+    }
+  }
 }
 
 resource "azurerm_cosmosdb_sql_container" "insights" {
@@ -55,3 +77,4 @@ resource "azurerm_cosmosdb_sql_container" "insights" {
   database_name       = azurerm_cosmosdb_sql_database.surveydb.name
   partition_key_paths = ["/partition"]
 }
+
