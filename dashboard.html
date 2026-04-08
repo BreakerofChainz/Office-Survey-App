@@ -4,10 +4,395 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard · Sky Forged Labs</title>
-  <meta name="description" content="Live survey results dashboard. Anonymous office culture data visualized with Chart.js, powered by Azure Functions and Cosmos DB." />
+  <meta name="description" content="Interactive survey results dashboard. Explore anonymous office culture data with cross-filtering, powered by Azure Functions, Cosmos DB, and Azure AI Language." />
   <link rel="stylesheet" href="style.css" />
-  <!-- Chart.js from CDN – no install needed -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    /* ── Dashboard-specific styles ── */
+
+    .dash-main {
+      flex: 1;
+      padding: 2.5rem 2.5rem 4rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── Page header ── */
+    .dash-page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .dash-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .dash-subtitle {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+      max-width: 520px;
+    }
+
+    /* ── Meta box ── */
+    .dash-meta-box {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.75rem;
+      flex-shrink: 0;
+    }
+
+    .dash-meta-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .dash-meta-value {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .dash-meta-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .dash-meta-divider {
+      width: 1px;
+      height: 40px;
+      background: var(--border);
+    }
+
+    /* ── Loading / error states ── */
+    .dash-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 6rem 2rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .dash-state--error { color: #f87171; }
+    .dash-state-icon   { font-size: 2rem; }
+
+    .dash-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── AI Summary Card ── */
+    .dash-summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 2rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dash-summary-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 3px 0 0 3px;
+    }
+
+    .dash-summary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .dash-summary-title {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .dash-summary-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.65rem;
+      background: var(--accent-dim);
+      border: 1px solid rgba(245,166,35,0.2);
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+    }
+
+    .dash-summary-badge::before {
+      content: '✦';
+      font-size: 0.6rem;
+    }
+
+    .dash-summary-text {
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    .dash-summary-text--placeholder {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+
+    .dash-summary-meta {
+      margin-top: 0.6rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Filter bar ── */
+    .dash-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .dash-filter-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .dash-filter-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .dash-filter-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.65rem;
+      background: var(--accent-dim);
+      border: 1px solid rgba(245,166,35,0.25);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .dash-filter-tag button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0;
+      font-size: 0.85rem;
+      line-height: 1;
+      opacity: 0.7;
+      transition: opacity var(--transition);
+    }
+
+    .dash-filter-tag button:hover { opacity: 1; }
+
+    .dash-filter-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .dash-filter-count strong { color: var(--accent); }
+
+    .btn-reset {
+      padding: 0.35rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-reset:disabled { opacity: 0.4; cursor: default; }
+
+    /* ── Charts layout ── */
+    .dash-section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .dash-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      animation: cardIn 0.4s ease both;
+      transition: border-color var(--transition);
+    }
+
+    .dash-card:hover {
+      border-color: rgba(245,166,35,0.2);
+    }
+
+    /* Column spans */
+    .col-12 { grid-column: span 12; }
+    .col-8  { grid-column: span 8;  }
+    .col-6  { grid-column: span 6;  }
+    .col-4  { grid-column: span 4;  }
+    .col-3  { grid-column: span 3;  }
+
+    .dash-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .dash-card-label {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .dash-card-type {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      padding: 0.18rem 0.55rem;
+      border-radius: 100px;
+    }
+
+    /* Chart containers — explicit heights for ECharts */
+    .chart-h-sm  { height: 200px; }
+    .chart-h-md  { height: 260px; }
+    .chart-h-lg  { height: 320px; }
+    .chart-h-xl  { height: 380px; }
+    .chart-h-heatmap { height: 220px; }
+
+    /* ── Architecture callout ── */
+    .dash-arch {
+      margin-top: 2rem;
+    }
+
+    .dash-arch-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+
+    .dash-arch-inner strong {
+      display: block;
+      color: var(--text);
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .col-4  { grid-column: span 6; }
+      .col-3  { grid-column: span 6; }
+    }
+
+    @media (max-width: 860px) {
+      .dash-main        { padding: 1.5rem 1.25rem 3rem; }
+      .dash-page-header { flex-direction: column; }
+      .dash-meta-box    { width: 100%; justify-content: center; }
+      .col-12, .col-8, .col-6, .col-4, .col-3 { grid-column: span 12; }
+      .chart-h-md  { height: 220px; }
+      .chart-h-lg  { height: 260px; }
+      .chart-h-xl  { height: 300px; }
+    }
+
+    @media (max-width: 480px) {
+      .dash-filter-bar { flex-direction: column; align-items: flex-start; }
+      .dash-filter-count { margin-left: 0; }
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
 
@@ -56,17 +441,22 @@
     <!-- ── Page Header ── -->
     <div class="dash-page-header">
       <div>
-        <div class="landing-badge">Live Data · Azure Functions + Cosmos DB</div>
-        <h1 class="dash-title">Survey <span class="accent-text">Results</span></h1>
+        <div class="landing-badge">Live Data · Azure Functions + Cosmos DB + Azure AI Language</div>
+        <h1 class="dash-title">Survey <span class="accent-text">Explorer</span></h1>
         <p class="dash-subtitle">
-          Real-time aggregation of anonymous office culture survey responses.
-          Data flows from the survey form → Azure Function → Cosmos DB → this dashboard.
+          Interactive office culture data. Click any chart segment to filter all charts.
+          Brush the timeline to focus on a date range. Reset anytime.
         </p>
       </div>
       <div class="dash-meta-box" id="metaBox">
         <div class="dash-meta-item">
           <span class="dash-meta-value" id="totalCount">—</span>
           <span class="dash-meta-label">Total Responses</span>
+        </div>
+        <div class="dash-meta-divider"></div>
+        <div class="dash-meta-item">
+          <span class="dash-meta-value" id="activeCount">—</span>
+          <span class="dash-meta-label">Active Filter</span>
         </div>
         <div class="dash-meta-divider"></div>
         <div class="dash-meta-item">
@@ -84,145 +474,158 @@
     <div id="errorState" class="dash-state dash-state--error" style="display:none;">
       <span class="dash-state-icon">⚠</span>
       <p id="errorMessage">Unable to load data. Please try again later.</p>
-      <button class="btn-secondary" onclick="loadStats()">Retry</button>
+      <button class="btn-secondary" onclick="initDashboard()">Retry</button>
     </div>
 
-    <!-- ── Charts Grid ── -->
-    <div id="chartsGrid" class="dash-grid" style="display:none;">
+    <!-- ── Dashboard Content (hidden until loaded) ── -->
+    <div id="dashContent" style="display:none;">
 
-      <!-- Submissions over time — full width -->
-      <div class="dash-card dash-card--wide">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Submissions Over Time</span>
-          <span class="dash-card-type">Line</span>
+      <!-- AI Summary Card -->
+      <div class="dash-summary-card" id="summaryCard">
+        <div class="dash-summary-header">
+          <span class="dash-summary-title">State of the Office</span>
+          <span class="dash-summary-badge">AI Generated · Updated Nightly</span>
         </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chart-timeseries"></canvas>
+        <p class="dash-summary-text" id="summaryText"></p>
+        <p class="dash-summary-meta" id="summaryMeta"></p>
+      </div>
+
+      <!-- Active Filters Bar -->
+      <div class="dash-filter-bar" id="filterBar">
+        <span class="dash-filter-label">Filters</span>
+        <div class="dash-filter-tags" id="filterTags">
+          <span style="font-size:0.8rem;color:var(--text-muted);font-style:italic;">
+            Click any chart segment to filter
+          </span>
+        </div>
+        <span class="dash-filter-count" id="filterCount">
+          Showing <strong id="filterCountNum">—</strong> responses
+        </span>
+        <button class="btn-reset" id="resetBtn" onclick="resetFilters()" disabled>
+          Reset All
+        </button>
+      </div>
+
+      <!-- Row 1: Timeline (full width) -->
+      <div class="dash-section-label">Submissions Over Time</div>
+      <div class="dash-grid">
+        <div class="dash-card col-12">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Response Timeline</span>
+            <span class="dash-card-type">Line · Brush to filter dates</span>
+          </div>
+          <div id="chart-timeline" class="chart-h-lg"></div>
         </div>
       </div>
 
-      <!-- Q1 – Coffee -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Coffee Preference</span>
-          <span class="dash-card-type">Doughnut</span>
+      <!-- Row 2: Work & Location -->
+      <div class="dash-section-label">Work Environment</div>
+      <div class="dash-grid">
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Work Location</span>
+            <span class="dash-card-type">Rose</span>
+          </div>
+          <div id="chart-q8" class="chart-h-md"></div>
         </div>
-        <div class="dash-chart-wrap dash-chart-wrap--sm">
-          <canvas id="chart-q1"></canvas>
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Focus Environment</span>
+            <span class="dash-card-type">Bar</span>
+          </div>
+          <div id="chart-q9" class="chart-h-md"></div>
         </div>
-      </div>
-
-      <!-- Q8 – Work Location -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Work Location Preference</span>
-          <span class="dash-card-type">Doughnut</span>
-        </div>
-        <div class="dash-chart-wrap dash-chart-wrap--sm">
-          <canvas id="chart-q8"></canvas>
-        </div>
-      </div>
-
-      <!-- Q2 – Meeting Time -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Preferred Meeting Time</span>
-          <span class="dash-card-type">Bar</span>
-        </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chart-q2"></canvas>
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Coffee Preference</span>
+            <span class="dash-card-type">Rose</span>
+          </div>
+          <div id="chart-q1" class="chart-h-md"></div>
         </div>
       </div>
 
-      <!-- Q5 – Productivity -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Peak Productivity Time</span>
-          <span class="dash-card-type">Bar</span>
+      <!-- Row 3: Meetings & Productivity Heatmap -->
+      <div class="dash-section-label">Meetings &amp; Productivity</div>
+      <div class="dash-grid">
+        <div class="dash-card col-8">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Productivity vs Meeting Time</span>
+            <span class="dash-card-type">Heatmap · Cross-question insight</span>
+          </div>
+          <div id="chart-heatmap" class="chart-h-heatmap"></div>
         </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chart-q5"></canvas>
-        </div>
-      </div>
-
-      <!-- Q3 – Worst Day -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Least Favorite Workday</span>
-          <span class="dash-card-type">Bar</span>
-        </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chart-q3"></canvas>
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Feelings About Meetings</span>
+            <span class="dash-card-type">Bar</span>
+          </div>
+          <div id="chart-q6" class="chart-h-heatmap"></div>
         </div>
       </div>
 
-      <!-- Q6 – Meetings Sentiment -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Feelings About Meetings</span>
-          <span class="dash-card-type">Bar</span>
+      <!-- Row 4: Scheduling -->
+      <div class="dash-section-label">Scheduling &amp; Rhythm</div>
+      <div class="dash-grid">
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Preferred Meeting Time</span>
+            <span class="dash-card-type">Bar</span>
+          </div>
+          <div id="chart-q2" class="chart-h-md"></div>
         </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chart-q6"></canvas>
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Peak Productivity Time</span>
+            <span class="dash-card-type">Bar</span>
+          </div>
+          <div id="chart-q5" class="chart-h-md"></div>
         </div>
-      </div>
-
-      <!-- Q4 – Work Style -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Project Work Style</span>
-          <span class="dash-card-type">Bar</span>
-        </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chart-q4"></canvas>
-        </div>
-      </div>
-
-      <!-- Q7 – Info Preference -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Preferred Info Format</span>
-          <span class="dash-card-type">Bar</span>
-        </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chart-q7"></canvas>
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Least Favorite Workday</span>
+            <span class="dash-card-type">Bar</span>
+          </div>
+          <div id="chart-q3" class="chart-h-md"></div>
         </div>
       </div>
 
-      <!-- Q9 – Focus -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Best Focus Environment</span>
-          <span class="dash-card-type">Bar</span>
+      <!-- Row 5: Collaboration & Communication -->
+      <div class="dash-section-label">Collaboration &amp; Communication</div>
+      <div class="dash-grid">
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Project Work Style</span>
+            <span class="dash-card-type">Bar</span>
+          </div>
+          <div id="chart-q4" class="chart-h-md"></div>
         </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chart-q9"></canvas>
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Preferred Info Format</span>
+            <span class="dash-card-type">Bar</span>
+          </div>
+          <div id="chart-q7" class="chart-h-md"></div>
+        </div>
+        <div class="dash-card col-4">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Morning Routine</span>
+            <span class="dash-card-type">Bar</span>
+          </div>
+          <div id="chart-q10" class="chart-h-md"></div>
         </div>
       </div>
 
-      <!-- Q10 – Morning Routine -->
-      <div class="dash-card">
-        <div class="dash-card-header">
-          <span class="dash-card-label">Morning Routine</span>
-          <span class="dash-card-type">Bar</span>
-        </div>
-        <div class="dash-chart-wrap">
-          <canvas id="chart-q10"></canvas>
+      <!-- Architecture callout -->
+      <div class="dash-arch">
+        <div class="dash-arch-inner">
+          <div>
+            <strong>Architecture</strong>
+            <p>Survey form → Azure Static Web App → Azure Function (Node.js) → Cosmos DB (NoSQL) → Azure Function aggregation + Azure AI Language → ECharts interactive dashboard</p>
+          </div>
         </div>
       </div>
 
-    </div><!-- /chartsGrid -->
-
-    <!-- ── Architecture callout ── -->
-    <div id="archCallout" class="dash-arch" style="display:none;">
-      <div class="dash-arch-inner">
-        <span class="dash-arch-icon"></span>
-        <div>
-          <strong>Architecture</strong>
-          <p>Survey form → Azure Static Web App → Azure Function (Node.js) → Cosmos DB (NoSQL) → Azure Function aggregation → Chart.js dashboard</p>
-        </div>
-      </div>
-    </div>
+    </div><!-- /dashContent -->
 
   </main>
 
@@ -232,229 +635,640 @@
   </footer>
 
   <script>
-    // ── Config ───────────────────────────────────────────────
-    const STATS_ENDPOINT = "https://officesurveyappfunctions-auhgezd0ggauctg9.eastus-01.azurewebsites.net/api/stats";
+  // ═══════════════════════════════════════════════════════════
+  // CONFIG
+  // ═══════════════════════════════════════════════════════════
+  const RESPONSES_ENDPOINT = "https://officesurveyappfunctions-auhgezd0ggauctg9.eastus-01.azurewebsites.net/api/responses";
+  const STATS_ENDPOINT     = "https://officesurveyappfunctions-auhgezd0ggauctg9.eastus-01.azurewebsites.net/api/stats";
 
-    // ── Chart.js global defaults to match site theme ─────────
-    Chart.defaults.color          = "#7a8499";
-    Chart.defaults.borderColor    = "rgba(255,255,255,0.08)";
-    Chart.defaults.font.family    = "'DM Sans', system-ui, sans-serif";
-    Chart.defaults.font.size      = 13;
+  // ═══════════════════════════════════════════════════════════
+  // THEME & PALETTE
+  // ═══════════════════════════════════════════════════════════
+  const T = {
+    bg:       "#0e1117",
+    surface:  "#161b26",
+    surface2: "#1e2535",
+    border:   "rgba(255,255,255,0.08)",
+    text:     "#e8ecf4",
+    muted:    "#7a8499",
+    accent:   "#f5a623",
+    accent2:  "#4fc3f7",
+    accent3:  "#4ade80",
+    accent4:  "#f472b6",
+    purple:   "#a78bfa",
+    orange:   "#fb923c",
+  };
 
-    const ACCENT      = "#f5a623";
-    const ACCENT2     = "#4fc3f7";
-    const ACCENT3     = "#4ade80";
-    const ACCENT4     = "#f472b6";
-    const SURFACE2    = "#1e2535";
-    const MUTED       = "#7a8499";
+  const PALETTE = [T.accent, T.accent2, T.accent3, T.accent4, T.purple, T.orange];
 
-    // Palette cycling for bar charts
-    const BAR_COLORS  = [ACCENT, ACCENT2, ACCENT3, ACCENT4, "#a78bfa", "#fb923c"];
-
-    // Doughnut palette
-    const DONUT_COLORS = [ACCENT, ACCENT2, ACCENT3, ACCENT4];
-
-    // ── Helpers ──────────────────────────────────────────────
-    function shortTime(iso) {
-      const d = new Date(iso);
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const ECHARTS_BASE = {
+    backgroundColor: "transparent",
+    textStyle:       { color: T.text, fontFamily: "'DM Sans', system-ui, sans-serif" },
+    tooltip: {
+      backgroundColor: T.surface2,
+      borderColor:     T.border,
+      textStyle:       { color: T.text, fontSize: 13 },
+      extraCssText:    "border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);"
     }
+  };
 
-    function makeBarChart(canvasId, labels, data) {
-      const ctx = document.getElementById(canvasId).getContext("2d");
-      return new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [{
-            data,
-            backgroundColor: BAR_COLORS.slice(0, labels.length),
-            borderRadius: 6,
-            borderSkipped: false
-          }]
-        },
-        options: {
-          indexAxis: "y",
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: ctx => ` ${ctx.parsed.x} response${ctx.parsed.x !== 1 ? "s" : ""}`
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: "rgba(255,255,255,0.05)" },
-              ticks: { precision: 0 }
-            },
-            y: {
-              grid: { display: false },
-              ticks: { color: "#e8ecf4" }
-            }
-          }
-        }
-      });
-    }
+  // ═══════════════════════════════════════════════════════════
+  // QUESTION METADATA
+  // ═══════════════════════════════════════════════════════════
+  const QUESTIONS = {
+    q1:  { label: "Coffee",       options: ["Hot coffee","Iced coffee","Tea or non-coffee drink","I don't drink caffeine"] },
+    q2:  { label: "Meeting Time", options: ["Early morning","Late morning","Afternoon","No preference"] },
+    q3:  { label: "Worst Day",    options: ["Monday","Tuesday","Wednesday","Thursday","Friday"] },
+    q4:  { label: "Work Style",   options: ["Mostly alone","Small groups","Large groups","Depends on the task"] },
+    q5:  { label: "Productivity", options: ["Early morning","Late morning","Afternoon","Evening"] },
+    q6:  { label: "Meetings",     options: ["Necessary and useful","Useful but too many","Mostly a distraction","Avoid whenever possible"] },
+    q7:  { label: "Info Format",  options: ["Written documentation","Chat or instant message","Meetings or calls","Visuals or diagrams"] },
+    q8:  { label: "Location",     options: ["Office","Home","Hybrid","No strong preference"] },
+    q9:  { label: "Focus",        options: ["Quiet environment","Background noise","Music","Complete silence"] },
+    q10: { label: "Morning",      options: ["Check email first","Review tasks or plans","Dive straight into work","Grab coffee first"] }
+  };
 
-    function makeDonutChart(canvasId, labels, data) {
-      const ctx = document.getElementById(canvasId).getContext("2d");
-      return new Chart(ctx, {
-        type: "doughnut",
-        data: {
-          labels,
-          datasets: [{
-            data,
-            backgroundColor: DONUT_COLORS,
-            borderColor: "#161b26",
-            borderWidth: 3,
-            hoverOffset: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: "65%",
-          plugins: {
-            legend: {
-              position: "bottom",
-              labels: {
-                padding: 16,
-                usePointStyle: true,
-                pointStyle: "circle",
-                color: "#e8ecf4"
-              }
-            },
-            tooltip: {
-              callbacks: {
-                label: ctx => ` ${ctx.label}: ${ctx.parsed} response${ctx.parsed !== 1 ? "s" : ""}`
-              }
-            }
-          }
-        }
-      });
-    }
+  // ═══════════════════════════════════════════════════════════
+  // STATE
+  // ═══════════════════════════════════════════════════════════
+  let allResponses    = [];   // full dataset from /api/responses
+  let activeResponses = [];   // currently filtered subset
+  let activeFilters   = {};   // { qid: "answer", ... } or { _dateRange: [start, end] }
+  let charts          = {};   // echarts instances keyed by id
+  let resizeObserver  = null;
 
-    function makeLineChart(canvasId, labels, data) {
-      const ctx = document.getElementById(canvasId).getContext("2d");
+  // ═══════════════════════════════════════════════════════════
+  // HELPERS
+  // ═══════════════════════════════════════════════════════════
+  function countBy(responses, qid) {
+    const result = {};
+    (QUESTIONS[qid]?.options || []).forEach(o => result[o] = 0);
+    responses.forEach(r => {
+      const val = r.answers?.[qid];
+      if (val) result[val] = (result[val] || 0) + 1;
+    });
+    return result;
+  }
 
-      // Gradient fill under the line
-      const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-      gradient.addColorStop(0,   "rgba(245,166,35,0.3)");
-      gradient.addColorStop(1,   "rgba(245,166,35,0.0)");
-
-      return new Chart(ctx, {
-        type: "line",
-        data: {
-          labels,
-          datasets: [{
-            label: "Submissions",
-            data,
-            borderColor:     ACCENT,
-            backgroundColor: gradient,
-            borderWidth:     2,
-            pointRadius:     4,
-            pointBackgroundColor: ACCENT,
-            fill: true,
-            tension: 0.35
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: ctx => ` ${ctx.parsed.y} submission${ctx.parsed.y !== 1 ? "s" : ""}`
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: "rgba(255,255,255,0.05)" },
-              ticks: { color: MUTED }
-            },
-            y: {
-              grid: { color: "rgba(255,255,255,0.05)" },
-              ticks: { precision: 0, color: MUTED }
-            }
-          }
-        }
-      });
-    }
-
-    // ── Main fetch + render ──────────────────────────────────
-    async function loadStats() {
-      document.getElementById("loadingState").style.display = "flex";
-      document.getElementById("errorState").style.display   = "none";
-      document.getElementById("chartsGrid").style.display   = "none";
-      document.getElementById("archCallout").style.display  = "none";
-
-      try {
-        const res  = await fetch(STATS_ENDPOINT);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        if (!data.ok) throw new Error(data.error || "API error");
-
-        // Meta bar
-        document.getElementById("totalCount").textContent   = data.totalResponses;
-        document.getElementById("lastUpdated").textContent  = shortTime(data.generatedAt);
-
-        // Helper to extract labels + counts for a given question id
-        function qData(id) {
-          const q = data.questions.find(q => q.id === id);
-          if (!q) return { labels: [], counts: [] };
-          return {
-            labels: q.options,
-            counts: q.options.map(o => q.counts[o] || 0)
-          };
-        }
-
-        // ── Render each chart ──
-        // Time series (line)
-        if (data.timeSeries && data.timeSeries.length > 0) {
-          makeLineChart(
-            "chart-timeseries",
-            data.timeSeries.map(d => d.date),
-            data.timeSeries.map(d => d.count)
-          );
-        } else {
-          // No submissions yet — show a placeholder message in the canvas area
-          document.getElementById("chart-timeseries").closest(".dash-card").querySelector(".dash-chart-wrap").innerHTML =
-            '<p class="dash-empty">No submissions yet — check back soon!</p>';
-        }
-
-        // Doughnut charts
-        const q1 = qData("q1");
-        makeDonutChart("chart-q1", q1.labels, q1.counts);
-
-        const q8 = qData("q8");
-        makeDonutChart("chart-q8", q8.labels, q8.counts);
-
-        // Bar charts (horizontal)
-        ["q2","q3","q4","q5","q6","q7","q9","q10"].forEach(id => {
-          const { labels, counts } = qData(id);
-          makeBarChart(`chart-${id}`, labels, counts);
-        });
-
-        // Show grid + arch callout
-        document.getElementById("loadingState").style.display  = "none";
-        document.getElementById("chartsGrid").style.display    = "grid";
-        document.getElementById("archCallout").style.display   = "block";
-
-      } catch (err) {
-        console.error("Dashboard load error:", err);
-        document.getElementById("loadingState").style.display  = "none";
-        document.getElementById("errorState").style.display    = "flex";
-        document.getElementById("errorMessage").textContent    = `Could not load data: ${err.message}`;
+  function applyFilters() {
+    activeResponses = allResponses.filter(r => {
+      // Date range filter
+      if (activeFilters._dateRange) {
+        const [start, end] = activeFilters._dateRange;
+        const d = r.submittedAt?.slice(0, 10);
+        if (!d || d < start || d > end) return false;
       }
+      // Question filters
+      for (const [qid, val] of Object.entries(activeFilters)) {
+        if (qid === "_dateRange") continue;
+        if (r.answers?.[qid] !== val) return false;
+      }
+      return true;
+    });
+  }
+
+  function setFilter(qid, value) {
+    if (activeFilters[qid] === value) {
+      // Clicking same segment toggles off
+      delete activeFilters[qid];
+    } else {
+      activeFilters[qid] = value;
+    }
+    applyFilters();
+    renderAllCharts();
+    updateFilterBar();
+  }
+
+  function setDateFilter(start, end) {
+    if (!start && !end) {
+      delete activeFilters._dateRange;
+    } else {
+      activeFilters._dateRange = [start, end];
+    }
+    applyFilters();
+    renderAllCharts();
+    updateFilterBar();
+  }
+
+  function resetFilters() {
+    activeFilters   = {};
+    activeResponses = [...allResponses];
+    renderAllCharts();
+    updateFilterBar();
+    // Clear timeline brush
+    if (charts["chart-timeline"]) {
+      charts["chart-timeline"].dispatchAction({ type: "brush", areas: [] });
+    }
+  }
+
+  function updateFilterBar() {
+    const tags     = document.getElementById("filterTags");
+    const countEl  = document.getElementById("filterCountNum");
+    const resetBtn = document.getElementById("resetBtn");
+    const hasFilters = Object.keys(activeFilters).length > 0;
+
+    countEl.textContent = activeResponses.length;
+    document.getElementById("activeCount").textContent = activeResponses.length;
+    resetBtn.disabled   = !hasFilters;
+
+    if (!hasFilters) {
+      tags.innerHTML = `<span style="font-size:0.8rem;color:var(--text-muted);font-style:italic;">Click any chart segment to filter</span>`;
+      return;
     }
 
-    // ── Init ─────────────────────────────────────────────────
-    loadStats();
+    tags.innerHTML = Object.entries(activeFilters).map(([qid, val]) => {
+      const label = qid === "_dateRange"
+        ? `Date: ${val[0]} → ${val[1]}`
+        : `${QUESTIONS[qid]?.label || qid}: ${val}`;
+      return `<span class="dash-filter-tag">
+        ${label}
+        <button onclick="removeFilter('${qid}')" aria-label="Remove filter">×</button>
+      </span>`;
+    }).join("");
+  }
+
+  function removeFilter(qid) {
+    delete activeFilters[qid];
+    if (qid === "_dateRange" && charts["chart-timeline"]) {
+      charts["chart-timeline"].dispatchAction({ type: "brush", areas: [] });
+    }
+    applyFilters();
+    renderAllCharts();
+    updateFilterBar();
+  }
+
+  function shortTime(iso) {
+    return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function initChart(id) {
+    if (charts[id]) {
+      charts[id].dispose();
+    }
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const instance = echarts.init(el, null, { renderer: "canvas" });
+    charts[id] = instance;
+    return instance;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // CHART RENDERERS
+  // ═══════════════════════════════════════════════════════════
+
+  function renderTimeline() {
+    const chart = initChart("chart-timeline");
+    if (!chart) return;
+
+    // Build time series from activeResponses
+    const byDay = {};
+    activeResponses.forEach(r => {
+      const d = r.submittedAt?.slice(0, 10);
+      if (d) byDay[d] = (byDay[d] || 0) + 1;
+    });
+
+    // Also build the full all-time series for context
+    const allByDay = {};
+    allResponses.forEach(r => {
+      const d = r.submittedAt?.slice(0, 10);
+      if (d) allByDay[d] = (allByDay[d] || 0) + 1;
+    });
+
+    const dates  = Object.keys(allByDay).sort();
+    const counts = dates.map(d => allByDay[d]);
+
+    const option = {
+      ...ECHARTS_BASE,
+      grid:    { top: 20, right: 20, bottom: 80, left: 50 },
+      tooltip: {
+        ...ECHARTS_BASE.tooltip,
+        trigger: "axis",
+        formatter: params => {
+          const p = params[0];
+          return `<div style="padding:4px 2px">
+            <div style="color:${T.muted};font-size:11px;margin-bottom:4px">${p.name}</div>
+            <div style="color:${T.accent};font-weight:600">${p.value} submission${p.value !== 1 ? "s" : ""}</div>
+          </div>`;
+        }
+      },
+      xAxis: {
+        type:        "category",
+        data:        dates,
+        axisLine:    { lineStyle: { color: T.border } },
+        axisTick:    { show: false },
+        axisLabel:   { color: T.muted, fontSize: 11 },
+        splitLine:   { show: false }
+      },
+      yAxis: {
+        type:        "value",
+        minInterval: 1,
+        axisLine:    { show: false },
+        axisTick:    { show: false },
+        axisLabel:   { color: T.muted, fontSize: 11 },
+        splitLine:   { lineStyle: { color: T.border, type: "dashed" } }
+      },
+      dataZoom: [
+        {
+          type:       "inside",
+          start:      0,
+          end:        100,
+          zoomOnMouseWheel: true
+        },
+        {
+          type:           "slider",
+          bottom:         8,
+          height:         24,
+          borderColor:    T.border,
+          backgroundColor: T.surface2,
+          fillerColor:    "rgba(245,166,35,0.12)",
+          handleStyle:    { color: T.accent },
+          textStyle:      { color: T.muted, fontSize: 10 },
+          dataBackground: { lineStyle: { color: T.accent, opacity: 0.3 }, areaStyle: { color: T.accent, opacity: 0.05 } }
+        }
+      ],
+      brush: {
+        toolbox:     ["lineX"],
+        brushStyle:  { borderWidth: 1, color: "rgba(245,166,35,0.08)", borderColor: T.accent }
+      },
+      series: [{
+        type:      "line",
+        data:      counts,
+        smooth:    0.4,
+        symbol:    "circle",
+        symbolSize: 6,
+        lineStyle: { color: T.accent, width: 2.5 },
+        itemStyle: { color: T.accent },
+        areaStyle: {
+          color: {
+            type:       "linear",
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0,   color: "rgba(245,166,35,0.25)" },
+              { offset: 1,   color: "rgba(245,166,35,0.00)" }
+            ]
+          }
+        }
+      }]
+    };
+
+    chart.setOption(option);
+
+    // Listen for brush selection to filter by date range
+    chart.on("brushEnd", params => {
+      if (!params.areas || params.areas.length === 0) {
+        setDateFilter(null, null);
+        return;
+      }
+      const area  = params.areas[0];
+      const range = area.coordRange;
+      if (!range || range.length < 2) return;
+      const startIdx = Math.floor(range[0]);
+      const endIdx   = Math.ceil(range[1]);
+      const start    = dates[Math.max(0, startIdx)];
+      const end      = dates[Math.min(dates.length - 1, endIdx)];
+      if (start && end) setDateFilter(start, end);
+    });
+  }
+
+  function renderRose(id, qid, colors) {
+    const chart = initChart(id);
+    if (!chart) return;
+
+    const counts = countBy(activeResponses, qid);
+    const total  = activeResponses.length;
+    const data   = Object.entries(counts).map(([name, value], i) => ({
+      name,
+      value,
+      itemStyle: { color: colors[i % colors.length] }
+    }));
+
+    const activeVal = activeFilters[qid];
+
+    const option = {
+      ...ECHARTS_BASE,
+      tooltip: {
+        ...ECHARTS_BASE.tooltip,
+        trigger: "item",
+        formatter: p => {
+          const pct = total > 0 ? ((p.value / total) * 100).toFixed(1) : 0;
+          return `<div style="padding:4px 2px">
+            <div style="color:${T.muted};font-size:11px;margin-bottom:4px">${p.name}</div>
+            <div style="color:${p.color};font-weight:600">${p.value} responses</div>
+            <div style="color:${T.muted};font-size:11px">${pct}% of active</div>
+          </div>`;
+        }
+      },
+      series: [{
+        type:         "pie",
+        radius:       ["20%", "75%"],
+        roseType:     "area",
+        center:       ["50%", "50%"],
+        itemStyle:    { borderRadius: 6, borderColor: T.surface, borderWidth: 2 },
+        label: {
+          show:      true,
+          position:  "outside",
+          color:     T.muted,
+          fontSize:  10,
+          formatter: p => p.value > 0 ? `${p.name.split(" ")[0]}\n${p.value}` : ""
+        },
+        labelLine:    { lineStyle: { color: T.border } },
+        emphasis: {
+          itemStyle: { shadowBlur: 12, shadowColor: "rgba(245,166,35,0.3)" },
+          label:     { color: T.text }
+        },
+        data: data.map(d => ({
+          ...d,
+          itemStyle: {
+            ...d.itemStyle,
+            opacity: activeVal && activeVal !== d.name ? 0.35 : 1
+          }
+        }))
+      }]
+    };
+
+    chart.setOption(option);
+    chart.off("click");
+    chart.on("click", params => setFilter(qid, params.name));
+  }
+
+  function renderBar(id, qid, horizontal = true) {
+    const chart = initChart(id);
+    if (!chart) return;
+
+    const counts  = countBy(activeResponses, qid);
+    const options = QUESTIONS[qid]?.options || [];
+    const values  = options.map(o => counts[o] || 0);
+    const total   = activeResponses.length;
+    const activeVal = activeFilters[qid];
+
+    const barColors = options.map((o, i) => ({
+      type:  "linear",
+      x:     horizontal ? 1 : 0,
+      y:     0,
+      x2:    horizontal ? 0 : 0,
+      y2:    horizontal ? 0 : 1,
+      colorStops: [
+        { offset: 0,   color: PALETTE[i % PALETTE.length] },
+        { offset: 1,   color: PALETTE[i % PALETTE.length] + "99" }
+      ]
+    }));
+
+    const option = {
+      ...ECHARTS_BASE,
+      grid: { top: 8, right: horizontal ? 16 : 8, bottom: 8, left: 8, containLabel: true },
+      tooltip: {
+        ...ECHARTS_BASE.tooltip,
+        trigger: "axis",
+        axisPointer: { type: "none" },
+        formatter: params => {
+          const p    = params[0];
+          const pct  = total > 0 ? ((p.value / total) * 100).toFixed(1) : 0;
+          const col  = PALETTE[p.dataIndex % PALETTE.length];
+          return `<div style="padding:4px 2px">
+            <div style="color:${T.muted};font-size:11px;margin-bottom:4px">${p.name}</div>
+            <div style="color:${col};font-weight:600">${p.value} responses</div>
+            <div style="color:${T.muted};font-size:11px">${pct}% of active</div>
+          </div>`;
+        }
+      },
+      xAxis: horizontal
+        ? { type: "value", axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: T.muted, fontSize: 10 }, splitLine: { lineStyle: { color: T.border, type: "dashed" } } }
+        : { type: "category", data: options, axisLine: { lineStyle: { color: T.border } }, axisTick: { show: false }, axisLabel: { color: T.muted, fontSize: 10, interval: 0, rotate: 0 }, splitLine: { show: false } },
+      yAxis: horizontal
+        ? { type: "category", data: options, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: T.text, fontSize: 11, width: 120, overflow: "truncate" }, splitLine: { show: false } }
+        : { type: "value", axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: T.muted, fontSize: 10 }, splitLine: { lineStyle: { color: T.border, type: "dashed" } } },
+      series: [{
+        type:      "bar",
+        data:      values.map((v, i) => ({
+          value:     v,
+          itemStyle: {
+            color:   barColors[i],
+            opacity: activeVal && activeVal !== options[i] ? 0.3 : 1,
+            borderRadius: horizontal ? [0, 5, 5, 0] : [5, 5, 0, 0]
+          }
+        })),
+        barMaxWidth:    36,
+        emphasis:       { focus: "self" },
+        label: {
+          show:      true,
+          position:  horizontal ? "right" : "top",
+          color:     T.muted,
+          fontSize:  10,
+          formatter: p => p.value > 0 ? p.value : ""
+        }
+      }]
+    };
+
+    chart.setOption(option);
+    chart.off("click");
+    chart.on("click", params => setFilter(qid, options[params.dataIndex]));
+  }
+
+  function renderHeatmap() {
+    const chart = initChart("chart-heatmap");
+    if (!chart) return;
+
+    const prodOptions    = QUESTIONS.q5.options;   // y-axis
+    const meetingOptions = QUESTIONS.q2.options;   // x-axis
+
+    // Build intersection counts
+    const matrix = {};
+    prodOptions.forEach(p => {
+      matrix[p] = {};
+      meetingOptions.forEach(m => matrix[p][m] = 0);
+    });
+
+    activeResponses.forEach(r => {
+      const prod    = r.answers?.q5;
+      const meeting = r.answers?.q2;
+      if (prod && meeting && matrix[prod] && matrix[prod][meeting] !== undefined) {
+        matrix[prod][meeting]++;
+      }
+    });
+
+    // Flatten to [x, y, value] format for ECharts heatmap
+    const data = [];
+    let maxVal = 0;
+    prodOptions.forEach((p, yi) => {
+      meetingOptions.forEach((m, xi) => {
+        const v = matrix[p][m];
+        data.push([xi, yi, v]);
+        if (v > maxVal) maxVal = v;
+      });
+    });
+
+    const option = {
+      ...ECHARTS_BASE,
+      grid:    { top: 8, right: 16, bottom: 48, left: 8, containLabel: true },
+      tooltip: {
+        ...ECHARTS_BASE.tooltip,
+        trigger: "item",
+        formatter: p => {
+          if (p.value[2] === 0) return `<div style="padding:4px 2px;color:${T.muted}">No responses</div>`;
+          return `<div style="padding:4px 2px">
+            <div style="color:${T.muted};font-size:11px;margin-bottom:4px">Productivity: <strong style="color:${T.text}">${prodOptions[p.value[1]]}</strong></div>
+            <div style="color:${T.muted};font-size:11px;margin-bottom:4px">Meeting pref: <strong style="color:${T.text}">${meetingOptions[p.value[0]]}</strong></div>
+            <div style="color:${T.accent};font-weight:600">${p.value[2]} respondents</div>
+          </div>`;
+        }
+      },
+      xAxis: {
+        type:       "category",
+        data:       meetingOptions.map(o => o.split(" ")[0] + (o.split(" ")[1] ? " " + o.split(" ")[1] : "")),
+        axisLine:   { lineStyle: { color: T.border } },
+        axisTick:   { show: false },
+        axisLabel:  { color: T.muted, fontSize: 10 },
+        splitLine:  { show: false },
+        name:       "Meeting Preference",
+        nameLocation: "middle",
+        nameGap:    28,
+        nameTextStyle: { color: T.muted, fontSize: 10 }
+      },
+      yAxis: {
+        type:       "category",
+        data:       prodOptions,
+        axisLine:   { show: false },
+        axisTick:   { show: false },
+        axisLabel:  { color: T.text, fontSize: 10 },
+        splitLine:  { show: false },
+        name:       "Peak Productivity",
+        nameLocation: "middle",
+        nameGap:    90,
+        nameTextStyle: { color: T.muted, fontSize: 10 }
+      },
+      visualMap: {
+        min:            0,
+        max:            Math.max(maxVal, 1),
+        calculable:     false,
+        show:           false,
+        inRange:        { color: ["rgba(245,166,35,0.05)", "rgba(245,166,35,0.25)", T.accent] }
+      },
+      series: [{
+        type:        "heatmap",
+        data,
+        label: {
+          show:      true,
+          color:     T.text,
+          fontSize:  11,
+          formatter: p => p.value[2] > 0 ? p.value[2] : ""
+        },
+        itemStyle:   { borderRadius: 4, borderColor: T.surface, borderWidth: 3 },
+        emphasis:    { itemStyle: { shadowBlur: 8, shadowColor: "rgba(245,166,35,0.4)" } }
+      }]
+    };
+
+    chart.setOption(option);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // RENDER ALL
+  // ═══════════════════════════════════════════════════════════
+  function renderAllCharts() {
+    renderTimeline();
+    renderRose("chart-q8", "q8", [T.accent, T.accent2, T.accent3, T.purple]);
+    renderRose("chart-q1", "q1", [T.orange, T.accent2, T.accent3, T.accent4]);
+    renderBar("chart-q9",  "q9",  true);
+    renderBar("chart-q6",  "q6",  true);
+    renderBar("chart-q2",  "q2",  true);
+    renderBar("chart-q5",  "q5",  true);
+    renderBar("chart-q3",  "q3",  true);
+    renderBar("chart-q4",  "q4",  true);
+    renderBar("chart-q7",  "q7",  true);
+    renderBar("chart-q10", "q10", true);
+    renderHeatmap();
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // SUMMARY CARD
+  // ═══════════════════════════════════════════════════════════
+  function renderSummary(aiSummary, summaryGeneratedAt) {
+    const textEl = document.getElementById("summaryText");
+    const metaEl = document.getElementById("summaryMeta");
+
+    if (aiSummary) {
+      textEl.textContent  = aiSummary;
+      textEl.className    = "dash-summary-text";
+      if (summaryGeneratedAt) {
+        const d = new Date(summaryGeneratedAt);
+        metaEl.textContent = `Generated ${d.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} · Based on all-time responses`;
+      }
+    } else {
+      textEl.textContent = "The AI summary will appear here after the first nightly update. Check back tomorrow.";
+      textEl.className   = "dash-summary-text dash-summary-text--placeholder";
+      metaEl.textContent = "";
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // RESIZE HANDLING
+  // ═══════════════════════════════════════════════════════════
+  function setupResizeObserver() {
+    if (resizeObserver) resizeObserver.disconnect();
+    resizeObserver = new ResizeObserver(() => {
+      Object.values(charts).forEach(c => c && c.resize());
+    });
+    resizeObserver.observe(document.getElementById("dashContent"));
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════════════════
+  async function initDashboard() {
+    document.getElementById("loadingState").style.display = "flex";
+    document.getElementById("errorState").style.display   = "none";
+    document.getElementById("dashContent").style.display  = "none";
+
+    try {
+      // Fetch individual responses and stats (for summary) in parallel
+      const [responsesRes, statsRes] = await Promise.all([
+        fetch(RESPONSES_ENDPOINT),
+        fetch(STATS_ENDPOINT)
+      ]);
+
+      if (!responsesRes.ok) throw new Error(`Responses API HTTP ${responsesRes.status}`);
+      if (!statsRes.ok)     throw new Error(`Stats API HTTP ${statsRes.status}`);
+
+      const responsesData = await responsesRes.json();
+      const statsData     = await statsRes.json();
+
+      if (!responsesData.ok) throw new Error(responsesData.error || "Responses API error");
+      if (!statsData.ok)     throw new Error(statsData.error     || "Stats API error");
+
+      // Populate state
+      allResponses    = responsesData.responses || [];
+      activeResponses = [...allResponses];
+
+      // Update header meta
+      document.getElementById("totalCount").textContent   = allResponses.length;
+      document.getElementById("activeCount").textContent  = allResponses.length;
+      document.getElementById("lastUpdated").textContent  = shortTime(statsData.generatedAt);
+
+      // Render summary card
+      renderSummary(statsData.aiSummary, statsData.summaryGeneratedAt);
+
+      // Update filter bar initial state
+      document.getElementById("filterCountNum").textContent = allResponses.length;
+
+      // Show dashboard and render charts
+      document.getElementById("loadingState").style.display = "none";
+      document.getElementById("dashContent").style.display  = "block";
+
+      // Small delay to ensure DOM is painted before ECharts measures containers
+      setTimeout(() => {
+        renderAllCharts();
+        setupResizeObserver();
+      }, 50);
+
+    } catch (err) {
+      console.error("Dashboard load error:", err);
+      document.getElementById("loadingState").style.display = "none";
+      document.getElementById("errorState").style.display   = "flex";
+      document.getElementById("errorMessage").textContent   = `Could not load data: ${err.message}`;
+    }
+  }
+
+  // ── Init on page load
+  initDashboard();
   </script>
 
 </body>
