@@ -518,7 +518,19 @@
         </div>
       </div>
 
-      <!-- Row 2: Work & Location -->
+      <!-- Row 2: Persona Distribution -->
+      <div class="dash-section-label">Work Persona Distribution</div>
+      <div class="dash-grid">
+        <div class="dash-card col-12">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Archetype Breakdown</span>
+            <span class="dash-card-type">Bar · Click to filter</span>
+          </div>
+          <div id="chart-archetypes" class="chart-h-md"></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Work & Location -->
       <div class="dash-section-label">Work Environment</div>
       <div class="dash-grid">
         <div class="dash-card col-4">
@@ -718,9 +730,13 @@
         const d = r.submittedAt?.slice(0, 10);
         if (!d || d < start || d > end) return false;
       }
+      // Archetype filter
+      if (activeFilters._archetype) {
+        if (r.archetype !== activeFilters._archetype) return false;
+      }
       // Question filters
       for (const [qid, val] of Object.entries(activeFilters)) {
-        if (qid === "_dateRange") continue;
+        if (qid === "_dateRange" || qid === "_archetype") continue;
         if (r.answers?.[qid] !== val) return false;
       }
       return true;
@@ -779,6 +795,8 @@
     tags.innerHTML = Object.entries(activeFilters).map(([qid, val]) => {
       const label = qid === "_dateRange"
         ? `Date: ${val[0]} → ${val[1]}`
+        : qid === "_archetype"
+        ? `Persona: ${ARCHETYPE_META[val]?.label || val}`
         : `${QUESTIONS[qid]?.label || qid}: ${val}`;
       return `<span class="dash-filter-tag">
         ${label}
@@ -1064,6 +1082,118 @@
     chart.on("click", params => setFilter(qid, options[params.dataIndex]));
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // ARCHETYPE CHART
+  // ═══════════════════════════════════════════════════════════
+  // Display names and colors must stay in sync with ARCHETYPES
+  // in survey.js. Order matches declaration order (tiebreak priority).
+  const ARCHETYPE_META = {
+    early_riser:  { label: "Early Riser",  color: "#f5a623" },
+    catalyst:     { label: "Catalyst",     color: "#4fc3f7" },
+    independent:  { label: "Independent",  color: "#a78bfa" },
+    strategist:   { label: "Strategist",   color: "#34d399" },
+    generalist:   { label: "Generalist",   color: "#fb923c" },
+    collaborator: { label: "Collaborator", color: "#38bdf8" },
+    operator:     { label: "Operator",     color: "#f87171" },
+    creative:     { label: "Creative",     color: "#e879f9" },
+    pragmatist:   { label: "Pragmatist",   color: "#a3e635" },
+    networker:    { label: "Networker",    color: "#fbbf24" }
+  };
+
+  function renderArchetypes() {
+    const chart = initChart("chart-archetypes");
+    if (!chart) return;
+
+    // Tally archetype counts from activeResponses
+    const counts = {};
+    Object.keys(ARCHETYPE_META).forEach(id => { counts[id] = 0; });
+    activeResponses.forEach(r => {
+      if (r.archetype && counts[r.archetype] !== undefined) {
+        counts[r.archetype]++;
+      }
+    });
+
+    // Sort by count descending for readability
+    const sorted = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1]);
+
+    const labels  = sorted.map(([id])    => ARCHETYPE_META[id].label);
+    const values  = sorted.map(([, cnt]) => cnt);
+    const colors  = sorted.map(([id])    => ARCHETYPE_META[id].color);
+    const total   = activeResponses.length || 1;
+
+    // Active filter value for this dimension
+    const activeVal = activeFilters["_archetype"] || null;
+
+    const option = {
+      ...ECHARTS_BASE,
+      grid: { top: 8, right: 48, bottom: 8, left: 8, containLabel: true },
+      tooltip: {
+        ...ECHARTS_BASE.tooltip,
+        trigger: "axis",
+        axisPointer: { type: "none" },
+        formatter: p => {
+          const idx = p[0].dataIndex;
+          const pct = total > 0 ? Math.round((values[idx] / total) * 100) : 0;
+          return `<div style="padding:4px 2px">
+            <div style="color:${colors[idx]};font-weight:700;margin-bottom:4px">${labels[idx]}</div>
+            <div style="color:${T.text};font-weight:600">${values[idx]} respondents</div>
+            <div style="color:${T.muted};font-size:11px">${pct}% of active</div>
+          </div>`;
+        }
+      },
+      xAxis: {
+        type:       "value",
+        axisLine:   { show: false },
+        axisTick:   { show: false },
+        axisLabel:  { color: T.muted, fontSize: 10 },
+        splitLine:  { lineStyle: { color: T.border, type: "dashed" } }
+      },
+      yAxis: {
+        type:      "category",
+        data:      labels,
+        axisLine:  { show: false },
+        axisTick:  { show: false },
+        axisLabel: { color: T.text, fontSize: 11 },
+        splitLine: { show: false }
+      },
+      series: [{
+        type: "bar",
+        data: values.map((v, i) => ({
+          value: v,
+          itemStyle: {
+            color:        colors[i],
+            opacity:      activeVal && activeVal !== sorted[i][0] ? 0.25 : 1,
+            borderRadius: [0, 5, 5, 0]
+          }
+        })),
+        barMaxWidth: 28,
+        emphasis:    { focus: "self" },
+        label: {
+          show:      true,
+          position:  "right",
+          color:     T.muted,
+          fontSize:  10,
+          formatter: p => p.value > 0 ? p.value : ""
+        }
+      }]
+    };
+
+    chart.setOption(option);
+    chart.off("click");
+    chart.on("click", params => {
+      const archetypeId = sorted[params.dataIndex][0];
+      if (activeFilters["_archetype"] === archetypeId) {
+        delete activeFilters["_archetype"];
+      } else {
+        activeFilters["_archetype"] = archetypeId;
+      }
+      applyFilters();
+      renderAllCharts();
+      updateFilterBar();
+    });
+  }
+
   function renderHeatmap() {
     const chart = initChart("chart-heatmap");
     if (!chart) return;
@@ -1165,6 +1295,7 @@
   // ═══════════════════════════════════════════════════════════
   function renderAllCharts() {
     renderTimeline();
+    renderArchetypes();
     renderRose("chart-q8", "q8", [T.accent, T.accent2, T.accent3, T.purple]);
     renderRose("chart-q1", "q1", [T.orange, T.accent2, T.accent3, T.accent4]);
     renderBar("chart-q9",  "q9",  true);

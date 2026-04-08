@@ -525,7 +525,7 @@ app.http("responses", {
       // Cosmos DB SQL supports TOP and ORDER BY for this pattern
       const { resources: docs } = await container.items
         .query({
-          query: "SELECT TOP 1000 c.id, c.submittedAt, c.answers FROM c ORDER BY c.submittedAt DESC"
+          query: "SELECT TOP 1000 c.id, c.submittedAt, c.answers, c.archetype FROM c ORDER BY c.submittedAt DESC"
         })
         .fetchAll();
 
@@ -540,6 +540,7 @@ app.http("responses", {
         return {
           id:          doc.id,
           submittedAt: doc.submittedAt,
+          archetype:   doc.archetype || null,
           answers
         };
       });
