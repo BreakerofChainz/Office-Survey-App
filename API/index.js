@@ -66,7 +66,7 @@ function validateSubmission(body) {
   }
 
   // Reject unexpected top-level fields beyond what survey.js sends
-  const allowedTopLevel = new Set(["id","surveyVersion","submittedAt","source","answers","website"]);
+  const allowedTopLevel = new Set(["id","surveyVersion","submittedAt","source","answers","website","archetype"]);
   for (const key of Object.keys(body)) {
     if (!allowedTopLevel.has(key)) {
       return { valid: false, error: `Unexpected field: ${key}` };
@@ -359,6 +359,7 @@ app.http("submit", {
       surveyVersion: body.surveyVersion || "1.0",
       submittedAt:   body.submittedAt   || new Date().toISOString(),
       source:        body.source        || "SkyForgedLabs-WebApp",
+      archetype:     body.archetype     || null,
       answers:       body.answers
     };
 

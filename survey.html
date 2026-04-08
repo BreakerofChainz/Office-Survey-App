@@ -77,13 +77,16 @@
         </div>
       </div>
 
-      <!-- Thank You Screen (hidden) -->
+      <!-- Thank You Screen (hidden until submission) -->
       <div class="thankyou-card" id="thankyouCard" style="display:none;">
         <div class="ty-icon">✦</div>
         <h2 class="ty-title">Thank You!</h2>
-        <p class="ty-sub">Your responses have been recorded. We appreciate you taking a moment to participate in this survey.</p>
-        <div class="ty-summary" id="tySummary"></div>
-        <a href="index.html" class="btn-secondary">← Back to Home</a>
+        <p class="ty-sub">Your responses have been recorded. Here's the work persona that best matches your answers.</p>
+
+        <!-- Persona Card — populated by showThankYou() in survey.js -->
+        <div class="persona-card" id="personaCard" style="display:none;"></div>
+
+        <a href="index.html" class="btn-secondary ty-home-btn">← Back to Home</a>
       </div>
 
     </div>

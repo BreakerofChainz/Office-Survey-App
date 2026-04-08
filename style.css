@@ -736,6 +736,171 @@ body > *:not(.bg-grid) { position: relative; z-index: 1; }
   .q-text { font-size: 1.2rem; }
 }
 
+/* ── Thank-You: home button spacing ── */
+.ty-home-btn { margin-top: 0.5rem; }
+
+/* ============================================================
+   PERSONA CARD
+   ============================================================ */
+
+.persona-card {
+  margin: 0 auto 2rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-align: left;
+  animation: cardIn 0.45s ease both;
+  max-width: 520px;
+}
+
+/* Coloured header band */
+.persona-header {
+  padding: 2rem 2rem 1.75rem;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--persona-color) 14%, var(--surface)) 0%,
+    var(--surface) 100%
+  );
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.persona-glyph {
+  font-size: 1.5rem;
+  color: var(--persona-color);
+  margin-bottom: 0.5rem;
+  display: block;
+  opacity: 0.85;
+}
+
+.persona-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--persona-color);
+  margin-bottom: 0.35rem;
+}
+
+.persona-name {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+}
+
+.persona-tagline {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* Score breakdown */
+.persona-breakdown {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.persona-breakdown-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.persona-bar-row {
+  display: grid;
+  grid-template-columns: 7rem 1fr 2rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.persona-bar-name {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.persona-bar-row.is-winner .persona-bar-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.persona-bar-track {
+  height: 6px;
+  background: var(--bg);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.persona-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.6s ease;
+  opacity: 0.5;
+}
+
+.persona-bar-row.is-winner .persona-bar-fill {
+  opacity: 1;
+}
+
+.persona-bar-score {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.persona-bar-row.is-winner .persona-bar-score {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Runner-up chips */
+.persona-runners {
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.persona-runners-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.persona-runner-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--chip-color) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+  color: var(--chip-color);
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .persona-header   { padding: 1.5rem; }
+  .persona-breakdown{ padding: 1.25rem 1.5rem; }
+  .persona-runners  { padding: 0.9rem 1.5rem; }
+  .persona-bar-row  { grid-template-columns: 5.5rem 1fr 1.75rem; }
+  .persona-name     { font-size: 1.4rem; }
+}
+
 /* ============================================================
    DASHBOARD PAGE
    ============================================================ */
