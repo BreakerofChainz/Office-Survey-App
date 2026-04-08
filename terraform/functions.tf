@@ -75,7 +75,7 @@ resource "azurerm_linux_function_app" "main" {
 
   # ── Site Config ───────────────────────────────────────────
   site_config {
-    ftps_state = "FtpsOnly"
+    ftps_state = "Disabled"
 
     cors {
       allowed_origins = [

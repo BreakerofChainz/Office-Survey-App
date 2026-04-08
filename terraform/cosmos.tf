@@ -14,7 +14,7 @@ resource "azurerm_cosmosdb_account" "main" {
   # with free tier. Changing this forces a destroy/replace, which would
   # wipe all survey data. Leave as false to match the actual Azure state.
   free_tier_enabled          = false
-  automatic_failover_enabled = true
+  automatic_failover_enabled = false
 
   consistency_policy {
     consistency_level = "Session"
