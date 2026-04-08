@@ -33,6 +33,17 @@ resource "azurerm_key_vault_secret" "cosmos_connection_string" {
   ]
 }
 
+# ── Store the AI Language key as a secret ───────────────────
+resource "azurerm_key_vault_secret" "ai_language_key" {
+  name         = "AiLanguageKey"
+  value        = azurerm_cognitive_account.language.primary_access_key
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [
+    azurerm_role_assignment.admin_kv_officer,
+  ]
+}
+
 # ── RBAC: admin account gets Key Vault Secrets Officer ───────
 resource "azurerm_role_assignment" "admin_kv_officer" {
   scope                = azurerm_key_vault.main.id

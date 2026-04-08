@@ -62,11 +62,11 @@ resource "azurerm_linux_function_app" "main" {
   app_settings = {
     FUNCTIONS_EXTENSION_VERSION = "~4"
 
-    COSMOS_CONNECTION_STRING              = var.cosmos_connection_string
+    COSMOS_CONNECTION_STRING              = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=CosmosConnectionString)"
     ALLOWED_ORIGIN                        = var.allowed_origin
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.main.connection_string
     AI_LANGUAGE_ENDPOINT                  = azurerm_cognitive_account.language.endpoint
-    AI_LANGUAGE_KEY                       = azurerm_cognitive_account.language.primary_access_key
+    AI_LANGUAGE_KEY                       = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=AiLanguageKey)"
     LOGIC_APP_WEBHOOK_URL                 = var.logic_app_webhook_url
     DEPLOYMENT_STORAGE_CONNECTION_STRING  = azurerm_storage_account.function_storage.primary_connection_string
     WEBSITE_TIME_ZONE                     = "Eastern Standard Time"
