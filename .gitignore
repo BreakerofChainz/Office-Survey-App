@@ -5,8 +5,7 @@ API/node_modules/
 # Terraform secrets and state — NEVER commit these
 terraform/terraform.tfvars
 terraform/.terraform/
-terraform/terraform.tfstate
-terraform/terraform.tfstate.backup
+terraform/terraform.tfstate*
 terraform/.terraform.lock.hcl
 terraform/crash.log
 terraform/crash.*.log
