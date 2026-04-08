@@ -25,7 +25,7 @@ resource "azurerm_key_vault" "main" {
 # ── Store the Cosmos connection string as a secret ───────────
 resource "azurerm_key_vault_secret" "cosmos_connection_string" {
   name         = "CosmosConnectionString"
-  value        = var.cosmos_connection_string
+  value        = azurerm_cosmosdb_account.main.primary_sql_connection_string
   key_vault_id = azurerm_key_vault.main.id
 
   depends_on = [
