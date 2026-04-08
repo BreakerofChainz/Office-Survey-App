@@ -288,7 +288,7 @@ app.http("stats", {
 //
 // LOGIC_APP_WEBHOOK_URL must be set in Application Settings.
 app.timer("dailyDigest", {
-  schedule: "0 59 4 * * *",   // 04:59 UTC = 11:59 PM Eastern (EST)
+  schedule: "0 59 23 * * *",   // 11:59 PM Eastern — uses WEBSITE_TIME_ZONE app setting
   handler: async (myTimer, context) => {
 
     const webhookUrl = process.env.LOGIC_APP_WEBHOOK_URL;
