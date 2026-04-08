@@ -14,8 +14,10 @@ resource "azurerm_cognitive_account" "language" {
   kind                = "TextAnalytics"
   sku_name            = "F0"
 
-  # The free tier does not support customer-managed keys or private endpoints.
-  # public_network_access is enabled by default — fine for a home lab.
+  # Required for custom text classification storage binding
+  identity {
+    type = "SystemAssigned"
+  }
 
   tags = {
     project     = "SkyForgedLabs"

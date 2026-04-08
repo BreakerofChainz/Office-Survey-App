@@ -36,24 +36,16 @@ resource "azurerm_storage_container" "language_training" {
 }
 
 # ── RBAC: Language resource gets Storage Blob Data Contributor
-# Required for the Language service to read training documents
-# from the container during model training runs.
-# Principal ID comes from the Language resource's system-assigned
-# managed identity.
-#
-# NOTE: The azurerm_cognitive_account resource does not expose
-# a managed identity block by default. We use the resource's
-# first-party service principal instead, which is identified
-# by the well-known Cognitive Services GUID below.
-# ============================================================
-# ── RBAC: Your admin account gets Storage Blob Data Contributor
-# Required to upload training .txt files to the container
-# and to label documents in Language Studio.
-# Without this role, Language Studio throws a 403 when trying
-# to read your container — even if you are the storage owner.
-# (This is explicitly called out in Microsoft's quickstart docs.)
 resource "azurerm_role_assignment" "admin_language_storage_contributor" {
   scope                = azurerm_storage_account.language_storage.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = var.admin_object_id
+}
+
+# Allows the Language service to read training documents from the
+# container programmatically during model training runs.
+resource "azurerm_role_assignment" "language_storage_contributor" {
+  scope                = azurerm_storage_account.language_storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = "8e836c1b-84dc-4f78-b56e-00f4faae483e"
 }
