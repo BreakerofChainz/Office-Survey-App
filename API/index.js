@@ -577,7 +577,8 @@ app.http("responses", {
 //
 // LOGIC_APP_WEBHOOK_URL must be set in Application Settings.
 app.timer("dailyDigest", {
-  schedule: "0 59 23 * * *",   // 11:59 PM Eastern — uses WEBSITE_TIME_ZONE app setting
+  schedule: "0 55 23 * * *",   // 11:55 PM UTC — fires just before UTC day rolls over
+
   handler: async (myTimer, context) => {
 
     const webhookUrl = process.env.LOGIC_APP_WEBHOOK_URL;
