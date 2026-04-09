@@ -3,136 +3,201 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sky Forged Labs - Office Survey</title>
-  <meta name="description" content="A quick 10-question office culture survey. Anonymous, takes ~2 minutes. Help explore how people work, collaborate, and stay productive." />
-
-  <!-- Open Graph / LinkedIn preview -->
+  <title>Sky Forged Labs</title>
+  <meta name="description" content="Sky Forged Labs — a personal cloud engineering home lab. Azure architecture, DevOps, and data projects by Clayton Puetzer." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://skyforgedlabs.com/" />
-  <meta property="og:title" content="How Does Your Office Tick? · Sky Forged Labs" />
-  <meta property="og:description" content="A quick 10-question anonymous office culture survey. Takes ~2 minutes. No personal data collected." />
+  <meta property="og:title" content="Sky Forged Labs" />
+  <meta property="og:description" content="A personal cloud engineering home lab. Azure architecture, DevOps, and data projects." />
   <meta property="og:image" content="https://skyforgedlabs.com/Logo.png" />
-  <meta property="og:image:width" content="1024" />
-  <meta property="og:image:height" content="1024" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
 
   <div class="bg-grid"></div>
 
+  <!-- ── Site Shell Nav ── -->
   <header class="site-header">
-    <a href="index.html" class="logo" aria-label="Sky Forged Labs – Home">
-      <img src="Logo.png" alt="Sky Forged Labs" class="logo-img" />
+    <a href="/" class="logo" aria-label="Sky Forged Labs — Home">
+      <img src="/Logo.png" alt="Sky Forged Labs" class="logo-img" />
     </a>
-    <nav class="site-nav">
-      <a href="index.html" class="nav-link active">Home</a>
-      <a href="survey.html" class="nav-link">Survey</a>
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="privacy.html" class="nav-link">Privacy</a>
+    <nav class="site-nav" id="siteNav">
+      <a href="/" class="nav-link active">Home</a>
+      <a href="/about" class="nav-link">About</a>
+      <a href="/resume" class="nav-link">Resume</a>
+      <a href="/contact" class="nav-link">Contact</a>
+      <div class="nav-dropdown" id="projectsDropdown">
+        <button class="nav-link nav-dropdown-btn" aria-expanded="false" aria-haspopup="true" id="projectsBtn">
+          Projects <span class="dropdown-caret">▾</span>
+        </button>
+        <div class="nav-dropdown-menu" id="projectsMenu" role="menu">
+          <a href="/office-survey" class="dropdown-item" role="menuitem">
+            <span class="dropdown-item-icon">📊</span>
+            <span>
+              <span class="dropdown-item-title">Office Survey</span>
+              <span class="dropdown-item-desc">Azure Functions · Cosmos DB · AI Language</span>
+            </span>
+          </a>
+          <div class="dropdown-item dropdown-item--coming-soon" role="menuitem" aria-disabled="true">
+            <span class="dropdown-item-icon">🔧</span>
+            <span>
+              <span class="dropdown-item-title">More coming soon</span>
+              <span class="dropdown-item-desc">Check back later</span>
+            </span>
+          </div>
+        </div>
+      </div>
     </nav>
     <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <div class="mobile-dropdown" id="mobileDropdown">
-      <a href="index.html" class="active">Home</a>
-      <a href="survey.html">Survey</a>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="privacy.html">Privacy</a>
+      <a href="/" class="active">Home</a>
+      <a href="/about">About</a>
+      <a href="/resume">Resume</a>
+      <a href="/contact">Contact</a>
+      <div class="mobile-section-label">Projects</div>
+      <a href="/office-survey" class="mobile-project-link">📊 Office Survey</a>
     </div>
   </header>
-  <script>
-    const btn = document.getElementById('hamburger');
-    const menu = document.getElementById('mobileDropdown');
-    btn.addEventListener('click', () => {
-      const isOpen = menu.classList.toggle('open');
-      btn.classList.toggle('open', isOpen);
-      btn.setAttribute('aria-expanded', isOpen);
-    });
-    document.addEventListener('click', (e) => {
-      if (!btn.contains(e.target) && !menu.contains(e.target)) {
-        menu.classList.remove('open');
-        btn.classList.remove('open');
-        btn.setAttribute('aria-expanded', false);
-      }
-    });
-  </script>
 
-  <main class="landing-main">
-    <div class="landing-container">
+  <main class="home-main">
 
-      <h1 class="landing-title">
-        How Does Your<br/>
-        <span class="accent-text">Office Tick?</span>
-      </h1>
-
-      <p class="landing-description">
-        Welcome! This is a quick 10-question office culture survey built as part of a
-        personal home lab project. Your answers help explore patterns in how people
-        work, collaborate, and stay productive.
-      </p>
-
-      <div class="privacy-notice">
-        <span class="notice-icon">🔒</span>
-        <p>
-          <strong>Heads up:</strong> No personally identifiable information is collected.
-          Device data is <em>not</em> stored. Responses are submitted anonymously and
-          used solely for this project's data exploration purposes.
-          <a href="privacy.html" class="inline-link">Read our privacy statement →</a>
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="landing-badge">Personal Home Lab · Azure Cloud Engineering</div>
+        <h1 class="hero-title">
+          Sky Forged<br/>
+          <span class="accent-text">Labs</span>
+        </h1>
+        <p class="hero-description">
+          A personal cloud engineering lab where I build, break, and document
+          real Azure infrastructure. Every project here is end-to-end — from
+          Terraform and CI/CD to front-end apps and AI services.
         </p>
-      </div>
-
-      <div class="landing-actions">
-        <a href="survey.html" class="btn-primary">
-          <span>Start the Survey</span>
-          <span class="btn-arrow">→</span>
-        </a>
-        <span class="survey-meta">10 questions &nbsp;·&nbsp; ~2 minutes</span>
-      </div>
-
-    </div>
-
-    <div class="landing-visual" aria-hidden="true">
-      <div class="visual-card card-1">
-        <div class="vc-label">Meeting Pref.</div>
-        <div class="vc-bar-group">
-          <div class="vc-bar" style="width:72%"><span>Late Morning</span></div>
-          <div class="vc-bar" style="width:48%"><span>Afternoon</span></div>
-          <div class="vc-bar" style="width:31%"><span>Early AM</span></div>
+        <div class="hero-actions">
+          <a href="#projects" class="btn-primary">
+            <span>View Projects</span>
+            <span class="btn-arrow">→</span>
+          </a>
+          <a href="/about" class="btn-secondary">About Me</a>
         </div>
       </div>
-      <div class="visual-card card-2">
-        <div class="vc-label">Work Style</div>
-        <div class="vc-donut">
-          <svg viewBox="0 0 80 80">
-            <circle cx="40" cy="40" r="30" fill="none" stroke="var(--accent)" stroke-width="14" stroke-dasharray="75 113" stroke-dashoffset="0"/>
-            <circle cx="40" cy="40" r="30" fill="none" stroke="var(--accent2)" stroke-width="14" stroke-dasharray="40 113" stroke-dashoffset="-75"/>
-            <circle cx="40" cy="40" r="30" fill="none" stroke="var(--muted-line)" stroke-width="14" stroke-dasharray="30 113" stroke-dashoffset="-115"/>
-          </svg>
-          <div class="donut-legend">
-            <span style="color:var(--accent)">● Hybrid</span>
-            <span style="color:var(--accent2)">● Office</span>
-            <span style="color:var(--muted-line)">● Home</span>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="tech-stack-card">
+          <div class="ts-label">Tech Stack</div>
+          <div class="ts-tags">
+            <span class="ts-tag ts-tag--primary">Azure</span>
+            <span class="ts-tag">Terraform</span>
+            <span class="ts-tag">Node.js</span>
+            <span class="ts-tag ts-tag--primary">Cosmos DB</span>
+            <span class="ts-tag">GitHub Actions</span>
+            <span class="ts-tag">Azure Functions</span>
+            <span class="ts-tag ts-tag--primary">Static Web Apps</span>
+            <span class="ts-tag">AI Language</span>
+            <span class="ts-tag">Log Analytics</span>
+            <span class="ts-tag ts-tag--primary">KQL</span>
           </div>
         </div>
       </div>
-      <div class="visual-card card-3">
-        <div class="vc-label">Coffee Order</div>
-        <div class="vc-icons">
-          <div class="vc-icon-row">☕ Hot <strong>41%</strong></div>
-          <div class="vc-icon-row">🧊 Iced <strong>29%</strong></div>
-          <div class="vc-icon-row">🍵 Tea <strong>19%</strong></div>
-          <div class="vc-icon-row">🚫 None <strong>11%</strong></div>
-        </div>
+    </section>
+
+    <!-- ── Projects ── -->
+    <section class="projects-section" id="projects">
+      <div class="section-header">
+        <div class="landing-badge">Projects</div>
+        <h2 class="section-title">What I've Built</h2>
+        <p class="section-subtitle">Each project is a full-stack Azure workload — infrastructure, backend, and front-end.</p>
       </div>
-    </div>
+
+      <div class="projects-grid">
+
+        <!-- Office Survey -->
+        <a href="/office-survey" class="project-card">
+          <div class="project-card-header">
+            <span class="project-icon">📊</span>
+            <span class="project-status project-status--live">Live</span>
+          </div>
+          <h3 class="project-title">Office Survey</h3>
+          <p class="project-description">
+            An anonymous office culture survey with real-time data visualisation.
+            Respondents receive a work persona archetype based on their answers.
+          </p>
+          <div class="project-tags">
+            <span class="project-tag">Azure Functions</span>
+            <span class="project-tag">Cosmos DB</span>
+            <span class="project-tag">AI Language</span>
+            <span class="project-tag">Terraform</span>
+          </div>
+          <span class="project-link">View Project →</span>
+        </a>
+
+        <!-- Placeholder -->
+        <div class="project-card project-card--placeholder">
+          <div class="project-card-header">
+            <span class="project-icon">🔧</span>
+            <span class="project-status project-status--soon">Coming Soon</span>
+          </div>
+          <h3 class="project-title">Next Project</h3>
+          <p class="project-description">
+            More Azure home lab projects in progress. Check back soon.
+          </p>
+          <div class="project-tags">
+            <span class="project-tag">TBD</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
 
   </main>
 
   <footer class="site-footer">
-    <span>© 2026 Sky Forged Labs · Home Lab Project</span>
-    <a href="privacy.html">Privacy</a>
+    <span>© 2026 Sky Forged Labs · Clayton Puetzer</span>
+    <a href="/office-survey/privacy">Privacy</a>
   </footer>
 
+  <script>
+    // ── Hamburger ──
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileDropdown');
+    hamburger.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', e => {
+      if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', false);
+      }
+    });
+
+    // ── Projects dropdown ──
+    const projectsBtn  = document.getElementById('projectsBtn');
+    const projectsMenu = document.getElementById('projectsMenu');
+    const projectsDrop = document.getElementById('projectsDropdown');
+
+    projectsBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = projectsDrop.classList.toggle('open');
+      projectsBtn.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', e => {
+      if (!projectsDrop.contains(e.target)) {
+        projectsDrop.classList.remove('open');
+        projectsBtn.setAttribute('aria-expanded', false);
+      }
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        projectsDrop.classList.remove('open');
+        projectsBtn.setAttribute('aria-expanded', false);
+      }
+    });
+  </script>
 </body>
 </html>

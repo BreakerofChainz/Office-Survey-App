@@ -1,0 +1,71 @@
+{
+  "routes": [
+
+    // ── Office Survey project — clean URL rewrites ──────────────
+    // Map clean URLs to their .html files inside the subfolder.
+    // These must come before the navigation fallback so they resolve
+    // to specific files rather than falling back to index.html.
+    {
+      "route": "/office-survey/survey",
+      "rewrite": "/office-survey/survey.html"
+    },
+    {
+      "route": "/office-survey/dashboard",
+      "rewrite": "/office-survey/dashboard.html"
+    },
+    {
+      "route": "/office-survey/privacy",
+      "rewrite": "/office-survey/privacy.html"
+    },
+    {
+      "route": "/office-survey",
+      "rewrite": "/office-survey/index.html"
+    },
+    {
+      "route": "/office-survey/",
+      "rewrite": "/office-survey/index.html"
+    },
+
+    // ── Root site — clean URL rewrites ──────────────────────────
+    {
+      "route": "/about",
+      "rewrite": "/about.html"
+    },
+    {
+      "route": "/resume",
+      "rewrite": "/resume.html"
+    },
+    {
+      "route": "/contact",
+      "rewrite": "/contact.html"
+    },
+    {
+      "route": "/projects",
+      "rewrite": "/projects.html"
+    }
+
+  ],
+
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/office-survey/*.html",
+      "/office-survey/*.js",
+      "/office-survey/*.css",
+      "/office-survey/*.png",
+      "/office-survey/*.jpg",
+      "/office-survey/*.ico",
+      "/*.css",
+      "/*.js",
+      "/*.png",
+      "/*.jpg",
+      "/*.ico",
+      "/*.json",
+      "/api/*"
+    ]
+  },
+
+  "mimeTypes": {
+    ".json": "application/json"
+  }
+}

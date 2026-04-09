@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard · Sky Forged Labs</title>
   <meta name="description" content="Interactive survey results dashboard. Explore anonymous office culture data with cross-filtering, powered by Azure Functions, Cosmos DB, and Azure AI Language." />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="/office-survey/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <style>
     /* ── Dashboard-specific styles ── */
@@ -399,28 +399,27 @@
   <div class="bg-grid"></div>
 
   <header class="site-header">
-    <a href="index.html" class="logo" aria-label="Sky Forged Labs – Home">
-      <img src="Logo.png" alt="Sky Forged Labs" class="logo-img" />
+    <a href="/office-survey" class="logo" aria-label="Sky Forged Labs – Home">
+      <img src="/Logo.png" alt="Sky Forged Labs" class="logo-img" />
     </a>
     <nav class="site-nav">
-      <a href="index.html" class="nav-link">Home</a>
-      <a href="survey.html" class="nav-link">Survey</a>
-      <a href="dashboard.html" class="nav-link active">Dashboard</a>
-      <a href="privacy.html" class="nav-link">Privacy</a>
+      <a href="/office-survey" class="nav-link">Home</a>
+      <a href="/office-survey/survey" class="nav-link">Survey</a>
+      <a href="/office-survey/dashboard" class="nav-link active">Dashboard</a>
+      <a href="/office-survey/privacy" class="nav-link">Privacy</a>
     </nav>
     <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
     <div class="mobile-dropdown" id="mobileDropdown">
-      <a href="index.html">Home</a>
-      <a href="survey.html">Survey</a>
-      <a href="dashboard.html" class="active">Dashboard</a>
-      <a href="privacy.html">Privacy</a>
+      <a href="/office-survey">Home</a>
+      <a href="/office-survey/survey">Survey</a>
+      <a href="/office-survey/dashboard" class="active">Dashboard</a>
+      <a href="/office-survey/privacy">Privacy</a>
     </div>
   </header>
-
   <script>
-    const btn  = document.getElementById('hamburger');
+    const btn = document.getElementById('hamburger');
     const menu = document.getElementById('mobileDropdown');
     btn.addEventListener('click', () => {
       const isOpen = menu.classList.toggle('open');
@@ -643,7 +642,7 @@
 
   <footer class="site-footer">
     <span>© 2026 Sky Forged Labs · Home Lab Project</span>
-    <a href="privacy.html">Privacy</a>
+    <a href="/office-survey/privacy">Privacy</a>
   </footer>
 
   <script>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About · Sky Forged Labs</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <header class="site-header">
+    <a href="/" class="logo" aria-label="Sky Forged Labs — Home">
+      <img src="/Logo.png" alt="Sky Forged Labs" class="logo-img" />
+    </a>
+    <nav class="site-nav" id="siteNav">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/about" class="nav-link active">About</a>
+      <a href="/resume" class="nav-link">Resume</a>
+      <a href="/contact" class="nav-link">Contact</a>
+      <div class="nav-dropdown" id="projectsDropdown">
+        <button class="nav-link nav-dropdown-btn" aria-expanded="false" aria-haspopup="true" id="projectsBtn">
+          Projects <span class="dropdown-caret">▾</span>
+        </button>
+        <div class="nav-dropdown-menu" id="projectsMenu" role="menu">
+          <a href="/office-survey" class="dropdown-item" role="menuitem">
+            <span class="dropdown-item-icon">📊</span>
+            <span>
+              <span class="dropdown-item-title">Office Survey</span>
+              <span class="dropdown-item-desc">Azure Functions · Cosmos DB · AI Language</span>
+            </span>
+          </a>
+          <div class="dropdown-item dropdown-item--coming-soon" role="menuitem" aria-disabled="true">
+            <span class="dropdown-item-icon">🔧</span>
+            <span>
+              <span class="dropdown-item-title">More coming soon</span>
+              <span class="dropdown-item-desc">Check back later</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-dropdown" id="mobileDropdown">
+      <a href="/">Home</a>
+      <a href="/about" class="active">About</a>
+      <a href="/resume">Resume</a>
+      <a href="/contact">Contact</a>
+      <div class="mobile-section-label">Projects</div>
+      <a href="/office-survey" class="mobile-project-link">📊 Office Survey</a>
+    </div>
+  </header>
+
+  <main class="coming-soon-main">
+    <div class="coming-soon-container">
+      <span class="coming-soon-icon">👤</span>
+      <div class="landing-badge">About</div>
+      <h1 class="coming-soon-title">Coming Soon</h1>
+      <p class="coming-soon-text">
+        This page is under construction. Check back soon.
+      </p>
+      <a href="/" class="btn-primary">
+        <span>Back to Home</span>
+        <span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <span>© 2026 Sky Forged Labs · Clayton Puetzer</span>
+    <a href="/office-survey/privacy">Privacy</a>
+  </footer>
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileDropdown');
+    hamburger.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', e => {
+      if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', false);
+      }
+    });
+    const projectsBtn = document.getElementById('projectsBtn');
+    const projectsDrop = document.getElementById('projectsDropdown');
+    projectsBtn.addEventListener('click', e => { e.stopPropagation(); const isOpen = projectsDrop.classList.toggle('open'); projectsBtn.setAttribute('aria-expanded', isOpen); });
+    document.addEventListener('click', e => { if (!projectsDrop.contains(e.target)) { projectsDrop.classList.remove('open'); projectsBtn.setAttribute('aria-expanded', false); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { projectsDrop.classList.remove('open'); projectsBtn.setAttribute('aria-expanded', false); } });
+  </script>
+</body>
+</html>
