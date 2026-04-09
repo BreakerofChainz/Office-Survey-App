@@ -1,10 +1,5 @@
 {
   "routes": [
-
-    // ── Office Survey project — clean URL rewrites ──────────────
-    // Map clean URLs to their .html files inside the subfolder.
-    // These must come before the navigation fallback so they resolve
-    // to specific files rather than falling back to index.html.
     {
       "route": "/office-survey/survey",
       "rewrite": "/office-survey/survey.html"
@@ -21,12 +16,6 @@
       "route": "/office-survey",
       "rewrite": "/office-survey/index.html"
     },
-    {
-      "route": "/office-survey/",
-      "rewrite": "/office-survey/index.html"
-    },
-
-    // ── Root site — clean URL rewrites ──────────────────────────
     {
       "route": "/about",
       "rewrite": "/about.html"
