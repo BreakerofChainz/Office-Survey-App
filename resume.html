@@ -4,8 +4,329 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Resume · Sky Forged Labs</title>
+  <meta name="description" content="Clayton Puetzer — Azure-focused IT professional. Cloud Engineer, Azure Solutions Architect Expert." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="/site.css" />
+  <style>
+
+    .resume-main {
+      flex: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 3rem 2.5rem 5rem;
+    }
+
+    .resume-header {
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .resume-name {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    .resume-contact {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .resume-contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    .resume-contact-item a { color: var(--text-muted); transition: color var(--transition); }
+    .resume-contact-item a:hover { color: var(--accent); }
+
+    .resume-objective {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+      max-width: 720px;
+    }
+
+    .resume-section { margin-bottom: 2.5rem; }
+
+    .resume-section-title {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .resume-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Experience cards ── */
+    .exp-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      transition: border-color var(--transition);
+    }
+    .exp-card:hover { border-color: rgba(245,166,35,0.2); }
+    .exp-card.is-open { border-color: rgba(245,166,35,0.3); }
+
+    .exp-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .exp-card-left { flex: 1; min-width: 0; }
+
+    .exp-role {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+
+    .exp-company {
+      font-size: 0.875rem;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 0.2rem;
+    }
+
+    .exp-dates {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    .exp-card-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .exp-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.55rem;
+      border-radius: 100px;
+    }
+    .exp-badge--current {
+      background: rgba(74,222,128,0.12);
+      color: #4ade80;
+      border: 1px solid rgba(74,222,128,0.25);
+    }
+    .exp-badge--lab {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid rgba(245,166,35,0.25);
+    }
+
+    .exp-chevron {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+      flex-shrink: 0;
+    }
+    .exp-card.is-open .exp-chevron { transform: rotate(180deg); }
+
+    .exp-card-body {
+      display: none;
+      padding: 0 1.5rem 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .exp-card.is-open .exp-card-body { display: block; }
+
+    .exp-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      padding-top: 1rem;
+    }
+
+    .exp-bullets li {
+      display: flex;
+      gap: 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+
+    .exp-bullets li::before {
+      content: '▸';
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── Certifications ── */
+    .certs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .cert-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+    .cert-card:hover {
+      border-color: rgba(245,166,35,0.3);
+      transform: translateY(-2px);
+    }
+
+    .cert-code {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.3rem;
+    }
+
+    .cert-name {
+      font-size: 0.78rem;
+      color: var(--text);
+      font-weight: 500;
+      line-height: 1.4;
+      margin-bottom: 0.25rem;
+    }
+
+    .cert-year { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* ── Education ── */
+    .edu-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .edu-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .edu-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+
+    .edu-degree {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.15rem;
+    }
+
+    .edu-school { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* ── Skills ── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .skill-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: border-color var(--transition);
+    }
+    .skill-group:hover { border-color: rgba(245,166,35,0.2); }
+    .skill-group.is-open { border-color: rgba(245,166,35,0.3); }
+
+    .skill-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .skill-group-title { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+
+    .skill-group-chevron {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+    }
+    .skill-group.is-open .skill-group-chevron { transform: rotate(180deg); }
+
+    .skill-group-body {
+      display: none;
+      padding-top: 0.75rem;
+      margin-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    .skill-group.is-open .skill-group-body { display: block; }
+
+    .skill-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+    .skill-tag {
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 0.2rem 0.6rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      color: var(--text-muted);
+    }
+
+    /* ── Download CTA ── */
+    .resume-download {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .resume-download-text { font-size: 0.875rem; color: var(--text-muted); }
+    .resume-download-text strong { color: var(--text); display: block; margin-bottom: 0.15rem; font-size: 0.95rem; }
+
+    @media (max-width: 600px) {
+      .resume-main { padding: 2rem 1.25rem 4rem; }
+      .certs-grid { grid-template-columns: 1fr 1fr; }
+      .skills-grid { grid-template-columns: 1fr; }
+      .exp-card-header { padding: 1rem 1.1rem; }
+      .exp-card-body { padding: 0 1.1rem 1rem; }
+    }
+  </style>
 </head>
 <body>
   <div class="bg-grid"></div>
@@ -47,26 +368,324 @@
     <div class="mobile-dropdown" id="mobileDropdown">
       <a href="/">Home</a>
       <a href="/about">About</a>
-      <a href="/resume">Resume</a>
+      <a href="/resume" class="active">Resume</a>
       <a href="/contact">Contact</a>
       <div class="mobile-section-label">Projects</div>
       <a href="/office-survey" class="mobile-project-link">📊 Office Survey</a>
     </div>
   </header>
 
-  <main class="coming-soon-main">
-    <div class="coming-soon-container">
-      <span class="coming-soon-icon">📄</span>
-      <div class="landing-badge">Resume</div>
-      <h1 class="coming-soon-title">Coming Soon</h1>
-      <p class="coming-soon-text">
-        This page is under construction. Check back soon.
+  <main class="resume-main">
+
+    <div class="resume-header">
+      <h1 class="resume-name">Clayton <span class="accent-text">Puetzer</span></h1>
+      <div class="resume-contact">
+        <span class="resume-contact-item">
+          <span>📞</span>
+          <a href="tel:7656312638">(765) 631-2638</a>
+        </span>
+        <span class="resume-contact-item">
+          <span>✉️</span>
+          <a href="mailto:claytonpuetzer1@gmail.com">claytonpuetzer1@gmail.com</a>
+        </span>
+        <span class="resume-contact-item">
+          <span>🔗</span>
+          <a href="https://www.linkedin.com/in/claytonpuetzer" target="_blank" rel="noopener">linkedin.com/in/claytonpuetzer</a>
+        </span>
+      </div>
+      <p class="resume-objective">
+        Azure-focused IT professional with 5+ years of progressive experience spanning Tier 2 technical support,
+        executive desktop support, and identity &amp; access management in hybrid Microsoft environments.
+        Hands-on with Azure, Exchange Online, Entra ID, RBAC, Intune, and M365 security controls. Known for
+        translating complex cloud and identity issues into reliable, secure solutions while collaborating directly
+        with Exchange administrators and Microsoft engineers. Actively pursuing cloud engineering and Azure
+        Administrator roles.
       </p>
-      <a href="/" class="btn-primary">
-        <span>Back to Home</span>
-        <span class="btn-arrow">→</span>
+    </div>
+
+    <div class="resume-download">
+      <div class="resume-download-text">
+        <strong>Want a copy?</strong>
+        Download the full resume as a PDF.
+      </div>
+      <a href="/Clayton_Puetzer_Resume_2026.pdf" download class="btn-primary">
+        <span>Download PDF</span>
+        <span class="btn-arrow">↓</span>
       </a>
     </div>
+
+    <!-- ── Experience ── -->
+    <div class="resume-section">
+      <div class="resume-section-title">Experience</div>
+
+      <div class="exp-card" data-card>
+        <div class="exp-card-header" data-card-toggle>
+          <div class="exp-card-left">
+            <div class="exp-role">Cloud Engineer</div>
+            <div class="exp-company">Sky Forged Labs (Home Lab)</div>
+            <div class="exp-dates">January 2024 — Present</div>
+          </div>
+          <div class="exp-card-right">
+            <span class="exp-badge exp-badge--lab">Home Lab</span>
+            <span class="exp-chevron">▼</span>
+          </div>
+        </div>
+        <div class="exp-card-body">
+          <ul class="exp-bullets">
+            <li>Designed and deployed a full-stack serverless application on Azure using Infrastructure as Code, with all resources provisioned and managed through Terraform including compute, storage, database, secrets, RBAC, and observability.</li>
+            <li>Built a multi-tier architecture consisting of Azure Static Web Apps for the frontend with a GitHub Actions CI/CD pipeline, Azure Functions (Flex Consumption, Node.js) for API handling, and Azure Cosmos DB Serverless for NoSQL data storage.</li>
+            <li>Implemented a security-hardened secrets management pattern using Azure Key Vault with Key Vault references in Function App settings, eliminating all plaintext secrets from application configuration and source control. Secrets are delivered at runtime via a System-Assigned Managed Identity with least-privilege RBAC role assignments.</li>
+            <li>Developed a real-time analytics dashboard using Chart.js consuming live data from an Azure Functions aggregation endpoint backed by Cosmos DB, with automated daily digest reporting via Azure Logic Apps and Gmail integration.</li>
+            <li>Integrated Azure AI Language (Cognitive Services) for key phrase extraction, Application Insights for telemetry, and a Log Analytics Workspace for centralized observability across the function runtime.</li>
+            <li>Designed solutions with a consistent focus on cost minimization, leveraging serverless and consumption-based pricing tiers across all applicable services to maintain near-zero monthly spend while validating enterprise-grade Azure architecture patterns.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="exp-card" data-card>
+        <div class="exp-card-header" data-card-toggle>
+          <div class="exp-card-left">
+            <div class="exp-role">Tier 2 Technical Services Analyst</div>
+            <div class="exp-company">Community Health Network</div>
+            <div class="exp-dates">February 2025 — Present</div>
+          </div>
+          <div class="exp-card-right">
+            <span class="exp-badge exp-badge--current">Current</span>
+            <span class="exp-chevron">▼</span>
+          </div>
+        </div>
+        <div class="exp-card-body">
+          <ul class="exp-bullets">
+            <li>Provide day-to-day administration and advanced troubleshooting across Azure, Exchange Online, Entra ID (Azure AD), and on-prem Active Directory in a 20,000+ user enterprise environment.</li>
+            <li>Manage security and access controls for SharePoint Online, Microsoft Teams, and Outlook using RBAC, security groups, manual access provisioning, and retention policies.</li>
+            <li>Administer and troubleshoot Microsoft 365 licensing, resolving complex entitlement and service-plan conflicts across multiple license SKUs.</li>
+            <li>Serve as escalation point for complex Microsoft issues, collaborating directly with Exchange administrators and Microsoft engineers to identify root cause and implement long-term fixes.</li>
+            <li>Member of the Microsoft Copilot enterprise support team, supporting Copilot licensing, access validation, and real-world business use cases.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="exp-card" data-card>
+        <div class="exp-card-header" data-card-toggle>
+          <div class="exp-card-left">
+            <div class="exp-role">Tier 2 Desktop Executive Support Technician</div>
+            <div class="exp-company">Community Health Network</div>
+            <div class="exp-dates">June 2022 — February 2025</div>
+          </div>
+          <div class="exp-card-right">
+            <span class="exp-chevron">▼</span>
+          </div>
+        </div>
+        <div class="exp-card-body">
+          <ul class="exp-bullets">
+            <li>Managed Active Directory and Group Policy, supporting user access, device configuration, and security enforcement.</li>
+            <li>Administered and supported Microsoft Intune and JAMF for device management, compliance, and secure endpoint configuration across Windows and macOS environments.</li>
+            <li>Oversaw asset management lifecycle including provisioning, tracking, and decommissioning of enterprise devices.</li>
+            <li>Acted as Tier 2/3 escalation for hardware, networking, security, and deployment-related issues.</li>
+            <li>Mentored junior technicians and contributed to internal documentation and process improvement initiatives.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="exp-card" data-card>
+        <div class="exp-card-header" data-card-toggle>
+          <div class="exp-card-left">
+            <div class="exp-role">Lead Tier 1 IT Support Technician</div>
+            <div class="exp-company">IUPUI</div>
+            <div class="exp-dates">June 2021 — June 2022</div>
+          </div>
+          <div class="exp-card-right">
+            <span class="exp-chevron">▼</span>
+          </div>
+        </div>
+        <div class="exp-card-body">
+          <ul class="exp-bullets">
+            <li>Delivered Tier 1–3 support for Microsoft systems, networking, and endpoint issues.</li>
+            <li>Trained and supervised new Tier 1 technicians.</li>
+            <li>Applied ITIL best practices to streamline incident, problem, and change management processes, improving service delivery and reducing downtime.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="exp-card" data-card>
+        <div class="exp-card-header" data-card-toggle>
+          <div class="exp-card-left">
+            <div class="exp-role">Help Desk Analyst</div>
+            <div class="exp-company">Concentrix (Apple)</div>
+            <div class="exp-dates">January 2021 — June 2021</div>
+          </div>
+          <div class="exp-card-right">
+            <span class="exp-chevron">▼</span>
+          </div>
+        </div>
+        <div class="exp-card-body">
+          <ul class="exp-bullets">
+            <li>Resolved high-volume technical support issues with 10+ tickets per day and under 10-minute average handle time.</li>
+            <li>Triaged escalations to specialized engineering teams and supported new-hire training initiatives.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Certifications ── -->
+    <div class="resume-section">
+      <div class="resume-section-title">Certifications</div>
+      <div class="certs-grid">
+        <div class="cert-card">
+          <div class="cert-code">AZ-305</div>
+          <div class="cert-name">Microsoft Certified Azure Solutions Architect Expert</div>
+          <div class="cert-year">2026</div>
+        </div>
+        <div class="cert-card">
+          <div class="cert-code">AZ-104</div>
+          <div class="cert-name">Microsoft Certified Azure Administrator Associate</div>
+          <div class="cert-year">2025</div>
+        </div>
+        <div class="cert-card">
+          <div class="cert-code">SC-900</div>
+          <div class="cert-name">Microsoft Certified Azure Security Fundamentals</div>
+          <div class="cert-year">2024</div>
+        </div>
+        <div class="cert-card">
+          <div class="cert-code">AZ-900</div>
+          <div class="cert-name">Microsoft Certified Azure Fundamentals</div>
+          <div class="cert-year">2023</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Education ── -->
+    <div class="resume-section">
+      <div class="resume-section-title">Education</div>
+      <div class="edu-list">
+        <div class="edu-item">
+          <span class="edu-icon">🎓</span>
+          <div>
+            <div class="edu-degree">Associate of Applied Science — Cyber Security</div>
+            <div class="edu-school">Ivy Tech Community College · 2020–2021</div>
+          </div>
+        </div>
+        <div class="edu-item">
+          <span class="edu-icon">🎓</span>
+          <div>
+            <div class="edu-degree">Bachelor of Science — Anthropology</div>
+            <div class="edu-school">Ball State University · 2014–2018</div>
+          </div>
+        </div>
+        <div class="edu-item">
+          <span class="edu-icon">🎓</span>
+          <div>
+            <div class="edu-degree">Associate of Science — Criminal Justice</div>
+            <div class="edu-school">Ball State University · 2016–2018</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Skills ── -->
+    <div class="resume-section">
+      <div class="resume-section-title">Skills &amp; Abilities</div>
+      <div class="skills-grid">
+
+        <div class="skill-group" data-skill-group>
+          <div class="skill-group-header">
+            <span class="skill-group-title">☁️ Cloud &amp; Identity</span>
+            <span class="skill-group-chevron">▼</span>
+          </div>
+          <div class="skill-group-body">
+            <div class="skill-tags">
+              <span class="skill-tag">Azure</span>
+              <span class="skill-tag">Entra ID (Azure AD)</span>
+              <span class="skill-tag">Exchange Online</span>
+              <span class="skill-tag">RBAC</span>
+              <span class="skill-tag">Identity &amp; Access Management</span>
+              <span class="skill-tag">Hybrid AD</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="skill-group" data-skill-group>
+          <div class="skill-group-header">
+            <span class="skill-group-title">🏢 Microsoft 365</span>
+            <span class="skill-group-chevron">▼</span>
+          </div>
+          <div class="skill-group-body">
+            <div class="skill-tags">
+              <span class="skill-tag">SharePoint Online</span>
+              <span class="skill-tag">Microsoft Teams</span>
+              <span class="skill-tag">Outlook</span>
+              <span class="skill-tag">Licensing &amp; Compliance</span>
+              <span class="skill-tag">Copilot</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="skill-group" data-skill-group>
+          <div class="skill-group-header">
+            <span class="skill-group-title">💻 Endpoint &amp; Device Management</span>
+            <span class="skill-group-chevron">▼</span>
+          </div>
+          <div class="skill-group-body">
+            <div class="skill-tags">
+              <span class="skill-tag">Intune</span>
+              <span class="skill-tag">JAMF</span>
+              <span class="skill-tag">Windows</span>
+              <span class="skill-tag">macOS</span>
+              <span class="skill-tag">iOS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="skill-group" data-skill-group>
+          <div class="skill-group-header">
+            <span class="skill-group-title">🔒 Security &amp; Networking</span>
+            <span class="skill-group-chevron">▼</span>
+          </div>
+          <div class="skill-group-body">
+            <div class="skill-tags">
+              <span class="skill-tag">Endpoint Security</span>
+              <span class="skill-tag">LAN/WAN</span>
+              <span class="skill-tag">Access Controls</span>
+              <span class="skill-tag">Retention Policies</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="skill-group" data-skill-group>
+          <div class="skill-group-header">
+            <span class="skill-group-title">🛠️ Tools &amp; Automation</span>
+            <span class="skill-group-chevron">▼</span>
+          </div>
+          <div class="skill-group-body">
+            <div class="skill-tags">
+              <span class="skill-tag">PowerShell</span>
+              <span class="skill-tag">Terraform</span>
+              <span class="skill-tag">GitHub Actions</span>
+              <span class="skill-tag">Software Deployment</span>
+              <span class="skill-tag">Log Analysis</span>
+              <span class="skill-tag">Technical Documentation</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="skill-group" data-skill-group>
+          <div class="skill-group-header">
+            <span class="skill-group-title">🤝 Professional Skills</span>
+            <span class="skill-group-chevron">▼</span>
+          </div>
+          <div class="skill-group-body">
+            <div class="skill-tags">
+              <span class="skill-tag">Executive Support</span>
+              <span class="skill-tag">Process Improvement</span>
+              <span class="skill-tag">Cross-Team Collaboration</span>
+              <span class="skill-tag">Time Management</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 
   <footer class="site-footer">
@@ -89,11 +708,40 @@
         hamburger.setAttribute('aria-expanded', false);
       }
     });
-    const projectsBtn = document.getElementById('projectsBtn');
+    const projectsBtn  = document.getElementById('projectsBtn');
     const projectsDrop = document.getElementById('projectsDropdown');
-    projectsBtn.addEventListener('click', e => { e.stopPropagation(); const isOpen = projectsDrop.classList.toggle('open'); projectsBtn.setAttribute('aria-expanded', isOpen); });
-    document.addEventListener('click', e => { if (!projectsDrop.contains(e.target)) { projectsDrop.classList.remove('open'); projectsBtn.setAttribute('aria-expanded', false); } });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { projectsDrop.classList.remove('open'); projectsBtn.setAttribute('aria-expanded', false); } });
+    projectsBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = projectsDrop.classList.toggle('open');
+      projectsBtn.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', e => {
+      if (!projectsDrop.contains(e.target)) {
+        projectsDrop.classList.remove('open');
+        projectsBtn.setAttribute('aria-expanded', false);
+      }
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        projectsDrop.classList.remove('open');
+        projectsBtn.setAttribute('aria-expanded', false);
+      }
+    });
+
+    // Experience card toggles
+    document.querySelectorAll('[data-card-toggle]').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        toggle.closest('[data-card]').classList.toggle('is-open');
+      });
+    });
+
+    // Skill group toggles
+    document.querySelectorAll('[data-skill-group]').forEach(group => {
+      group.addEventListener('click', () => group.classList.toggle('is-open'));
+    });
+
+    // Open Sky Forged Labs card by default
+    document.querySelector('[data-card]').classList.add('is-open');
   </script>
 </body>
 </html>
