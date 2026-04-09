@@ -4,14 +4,212 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>About · Sky Forged Labs</title>
+  <meta name="description" content="What is Sky Forged Labs? A personal Azure cloud engineering lab built to validate enterprise-grade architecture at under $10 a month." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="/site.css" />
+  <style>
+
+    .about-main {
+      flex: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 3rem 2.5rem 5rem;
+    }
+
+    .about-hero {
+      margin-bottom: 3.5rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .about-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1.25rem;
+    }
+
+    .about-lead {
+      font-size: 1.05rem;
+      line-height: 1.85;
+      color: var(--text-muted);
+      max-width: 680px;
+    }
+
+    .about-lead strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .about-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.75rem;
+    }
+
+    .about-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      transition: border-color var(--transition);
+    }
+    .about-stat:hover { border-color: rgba(245,166,35,0.25); }
+
+    .about-stat-value {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+
+    .about-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .about-section {
+      margin-bottom: 3rem;
+    }
+
+    .about-section-label {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .about-section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .about-section-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    .about-body {
+      font-size: 0.975rem;
+      line-height: 1.85;
+      color: var(--text-muted);
+    }
+
+    .about-body p + p {
+      margin-top: 1rem;
+    }
+
+    .about-body strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .about-diagram {
+      margin-top: 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .about-diagram img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .about-diagram-caption {
+      padding: 0.85rem 1.25rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .roadmap-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      transition: border-color var(--transition);
+    }
+    .roadmap-item:hover { border-color: rgba(245,166,35,0.2); }
+
+    .roadmap-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .roadmap-indicator--pending {
+      background: var(--text-muted);
+      opacity: 0.4;
+    }
+    .roadmap-indicator--active {
+      background: var(--accent);
+    }
+
+    .roadmap-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+
+    .roadmap-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .about-cta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding-top: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .about-main { padding: 2rem 1.25rem 4rem; }
+      .about-stats { grid-template-columns: 1fr 1fr; }
+      .roadmap-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
   <div class="bg-grid"></div>
 
   <header class="site-header">
-    <a href="/" class="logo" aria-label="Sky Forged Labs — Home">
+    <a href="/" class="logo" aria-label="Sky Forged Labs -- Home">
       <img src="/Logo.png" alt="Sky Forged Labs" class="logo-img" />
     </a>
     <nav class="site-nav" id="siteNav">
@@ -50,23 +248,167 @@
       <a href="/resume">Resume</a>
       <a href="/contact">Contact</a>
       <div class="mobile-section-label">Projects</div>
-      <a href="/office-survey" class="mobile-project-link">📊 Office Survey</a>
+      <a href="/office-survey" class="mobile-project-link">Office Survey</a>
     </div>
   </header>
 
-  <main class="coming-soon-main">
-    <div class="coming-soon-container">
-      <span class="coming-soon-icon">👤</span>
-      <div class="landing-badge">About</div>
-      <h1 class="coming-soon-title">Coming Soon</h1>
-      <p class="coming-soon-text">
-        This page is under construction. Check back soon.
+  <main class="about-main">
+
+    <!-- Hero -->
+    <div class="about-hero">
+      <div class="landing-badge">Personal Cloud Engineering Lab · Azure</div>
+      <h1 class="about-title">What is<br/><span class="accent-text">Sky Forged Labs?</span></h1>
+      <p class="about-lead">
+        Sky Forged Labs is my personal Azure home lab, built to bridge the gap between my certification
+        knowledge and real hands-on experience. I designed everything with cost as the first priority,
+        then security, then functionality, and tried to use serverless architecture wherever I could
+        to keep the monthly bill as low as possible.
       </p>
-      <a href="/" class="btn-primary">
-        <span>Back to Home</span>
+      <div class="about-stats">
+        <div class="about-stat">
+          <div class="about-stat-value">$10</div>
+          <div class="about-stat-label">Monthly Azure spend target</div>
+        </div>
+        <div class="about-stat">
+          <div class="about-stat-value">100%</div>
+          <div class="about-stat-label">Infrastructure as Code via Terraform</div>
+        </div>
+        <div class="about-stat">
+          <div class="about-stat-value">8+</div>
+          <div class="about-stat-label">Azure services in production</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Background -->
+    <div class="about-section">
+      <div class="about-section-label">Background</div>
+      <h2 class="about-section-title">A little about me</h2>
+      <div class="about-body">
+        <p>
+          My background is in enterprise IT support. I spent several years working across Microsoft 365,
+          Entra ID, Exchange Online, and hybrid Active Directory at various companies, ranging from 
+          a large healthcare organization, a major univeristy, and at an MSP for Apple. Most of my day-to-day 
+          was owning the escalations that nobody else could figure out, working with Microsoft engineers on 
+          identity and licensing issues, and generally being the person the team came to when something did 
+          not have an obvious answer. I really enjoyed that work, but I knew I wanted to move toward building 
+          and designing things rather than supporting them.
+        </p>
+        <p>
+          The certifications were part of that transition. I went through AZ-900, SC-900, AZ-104, and
+          AZ-305 while this lab was being built, and having both going at the same time made a
+          big difference. A lot of the exam material made more sense once I had actually tried to
+          build the things being tested, and the lab gave me somewhere to apply ideas I picked up
+          while studying. This has been an awesome journey so far, and I am excited to continue building
+          this project. What started as a portfolio piece has really turned into something I find a lot 
+          of joy in (and pain, looking at you front-end deveoplment). 
+        </p>
+      </div>
+    </div>
+
+    <!-- Origin -->
+    <div class="about-section">
+      <div class="about-section-label">Origin Story</div>
+      <h2 class="about-section-title">How it started</h2>
+      <div class="about-body">
+        <p>
+          The Office Survey app was the first "real" project I built here. I picked it because it forced me
+          to work across a real full stack: a frontend that people could actually use, a backend API,
+          a database, AI integration, and some automated reporting. It was complex enough to be worth
+          doing but not so large that it would never get finished (or cost hundreds of dollars). I tried to
+          do something with office culture for the sake of this project being a portfolio piece, and later
+          decided to integrate the persona-schema to add some personality to it. 
+        </p>
+        <p>
+          From the start, I made a few decisions that I have stuck with throughout the whole lab.
+          Everything is managed with Terraform. I use serverless and consumption-based pricing
+          wherever it is available so costs stay low. No secrets ever go into source control
+          or application configuration in plaintext. Those rules have not, and will never change.
+        </p>
+      </div>
+    </div>
+
+    <!-- Architecture -->
+    <div class="about-section">
+      <div class="about-section-label">Architecture</div>
+      <h2 class="about-section-title">The current stack</h2>
+      <div class="about-body">
+        <p>
+          The diagram below shows what is currently deployed and running in the lab.
+        </p>
+      </div>
+      <div class="about-diagram">
+        <img src="/About_Diagram.png" alt="Sky Forged Labs architecture diagram showing Azure Static Web Apps, Functions, Cosmos DB, Key Vault, AI Language, Application Insights, Log Analytics, Logic Apps, and GitHub Actions CI/CD" />
+        <div class="about-diagram-caption">
+          Current production architecture · All resources managed via Terraform · East US
+        </div>
+      </div>
+    </div>
+
+    <!-- Roadmap -->
+    <div class="about-section">
+      <div class="about-section-label">Roadmap</div>
+      <h2 class="about-section-title">What I am working on next</h2>
+      <div class="about-body">
+        <p>
+          The lab is always expanding. Here is what is currently in progress or coming up soon.
+        </p>
+      </div>
+      <div class="roadmap-grid">
+        <div class="roadmap-item">
+          <div class="roadmap-indicator roadmap-indicator--active"></div>
+          <div>
+            <div class="roadmap-title">APIM in front of Function App</div>
+            <div class="roadmap-desc">API Management gateway for rate limiting, auth, and lifecycle management</div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-indicator roadmap-indicator--active"></div>
+          <div>
+            <div class="roadmap-title">Azure Monitor Alerts and KQL</div>
+            <div class="roadmap-desc">Proactive alerting and custom KQL queries against the Log Analytics workspace</div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-indicator roadmap-indicator--pending"></div>
+          <div>
+            <div class="roadmap-title">Azure Service Bus</div>
+            <div class="roadmap-desc">Async messaging between the Function App and Cosmos DB for decoupled writes</div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-indicator roadmap-indicator--pending"></div>
+          <div>
+            <div class="roadmap-title">Azure Data Factory and Synapse</div>
+            <div class="roadmap-desc">Export Cosmos DB to Blob Storage and query it with Synapse serverless SQL</div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-indicator roadmap-indicator--pending"></div>
+          <div>
+            <div class="roadmap-title">Defender for Cloud</div>
+            <div class="roadmap-desc">Free tier enabled with recommendations reviewed and documented</div>
+          </div>
+        </div>
+        <div class="roadmap-item">
+          <div class="roadmap-indicator roadmap-indicator--pending"></div>
+          <div>
+            <div class="roadmap-title">Azure Policy and Drift Detection</div>
+            <div class="roadmap-desc">Governance policies on the resource group and Terraform drift detection in the pipeline</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="about-cta">
+      <a href="/office-survey" class="btn-primary">
+        <span>See the Office Survey</span>
         <span class="btn-arrow">→</span>
       </a>
+      <a href="/resume" class="btn-secondary">View Resume</a>
     </div>
+
   </main>
 
   <footer class="site-footer">
@@ -89,11 +431,25 @@
         hamburger.setAttribute('aria-expanded', false);
       }
     });
-    const projectsBtn = document.getElementById('projectsBtn');
+    const projectsBtn  = document.getElementById('projectsBtn');
     const projectsDrop = document.getElementById('projectsDropdown');
-    projectsBtn.addEventListener('click', e => { e.stopPropagation(); const isOpen = projectsDrop.classList.toggle('open'); projectsBtn.setAttribute('aria-expanded', isOpen); });
-    document.addEventListener('click', e => { if (!projectsDrop.contains(e.target)) { projectsDrop.classList.remove('open'); projectsBtn.setAttribute('aria-expanded', false); } });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { projectsDrop.classList.remove('open'); projectsBtn.setAttribute('aria-expanded', false); } });
+    projectsBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = projectsDrop.classList.toggle('open');
+      projectsBtn.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', e => {
+      if (!projectsDrop.contains(e.target)) {
+        projectsDrop.classList.remove('open');
+        projectsBtn.setAttribute('aria-expanded', false);
+      }
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        projectsDrop.classList.remove('open');
+        projectsBtn.setAttribute('aria-expanded', false);
+      }
+    });
   </script>
 </body>
 </html>
