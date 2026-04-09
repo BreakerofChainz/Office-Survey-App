@@ -736,5 +736,13 @@
  });
  });
 
- // Skill group toggles
- document.querySelectorAll('[data-skill-group]').forEach(group => group.classList.toggle('is-open'));
+    // Skill group toggles
+    document.querySelectorAll('[data-skill-group]').forEach(group => {
+      group.addEventListener('click', () => group.classList.toggle('is-open'));
+    });
+
+    // Open Sky Forged Labs card by default
+    document.querySelector('[data-card]').classList.add('is-open');
+  </script>
+</body>
+</html>
