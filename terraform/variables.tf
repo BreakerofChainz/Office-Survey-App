@@ -115,3 +115,21 @@ variable "github_repo" {
   type        = string
   default     = "BreakerofChainz/Office-Survey-App"
 }
+
+variable "turnstile_secret_key" {
+  description = "Cloudflare Turnstile secret key for server-side verification"
+  type        = string
+  sensitive   = true
+}
+
+variable "contact_webhook_url" {
+  description = "Logic App HTTP trigger URL for contact form emails"
+  type        = string
+  sensitive   = true
+}
+
+variable "contact_logic_app_name" {
+  description = "Name for the contact form Logic App"
+  type        = string
+  default     = "skyforgedlabs-contact"
+}

@@ -4,8 +4,171 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Contact · Sky Forged Labs</title>
+  <meta name="description" content="Get in touch with Clayton Puetzer — Azure cloud engineering, DevOps, and infrastructure questions welcome." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="/site.css" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <style>
+    .contact-main {
+      flex: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 3rem 2.5rem 5rem;
+    }
+
+    .contact-hero {
+      margin-bottom: 2.5rem;
+      padding-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .contact-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .contact-lead {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+    }
+
+    /* ── Form ── */
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .form-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .form-input,
+    .form-textarea {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.8rem 1rem;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--text);
+      transition: border-color var(--transition), box-shadow var(--transition);
+      width: 100%;
+      outline: none;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+      border-color: rgba(245, 166, 35, 0.5);
+      box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.08);
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 140px;
+      line-height: 1.65;
+    }
+
+    /* Honeypot — visually hidden from real users, bots fill it */
+    .form-honeypot {
+      position: absolute;
+      left: -9999px;
+      opacity: 0;
+      pointer-events: none;
+      tabindex: -1;
+    }
+
+    /* ── Turnstile wrapper ── */
+    .turnstile-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* ── Submit button ── */
+    .contact-submit {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 1.75rem;
+      background: var(--accent);
+      color: #0e1117;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .contact-submit:hover:not(:disabled) {
+      background: #ffc04d;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(245, 166, 35, 0.28);
+    }
+    .contact-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Status messages ── */
+    .form-status {
+      display: none;
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .form-status.success {
+      display: block;
+      background: rgba(74, 222, 128, 0.08);
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      color: #4ade80;
+    }
+    .form-status.error {
+      display: block;
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.25);
+      color: #f87171;
+    }
+
+    @media (max-width: 600px) {
+      .contact-main { padding: 2rem 1.5rem 4rem; }
+      .form-row { grid-template-columns: 1fr; }
+      .contact-submit { width: 100%; justify-content: center; }
+      .turnstile-wrapper { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
 </head>
 <body>
   <div class="bg-grid"></div>
@@ -48,25 +211,100 @@
       <a href="/">Home</a>
       <a href="/about">About</a>
       <a href="/resume">Resume</a>
-      <a href="/contact">Contact</a>
+      <a href="/contact" class="active">Contact</a>
       <div class="mobile-section-label">Projects</div>
       <a href="/office-survey" class="mobile-project-link">📊 Office Survey</a>
     </div>
   </header>
 
-  <main class="coming-soon-main">
-    <div class="coming-soon-container">
-      <span class="coming-soon-icon">✉️</span>
+  <main class="contact-main">
+
+    <div class="contact-hero">
       <div class="landing-badge">Contact</div>
-      <h1 class="coming-soon-title">Coming Soon</h1>
-      <p class="coming-soon-text">
-        This page is under construction. Check back soon.
+      <h1 class="contact-title">Get in <span class="accent-text">Touch</span></h1>
+      <p class="contact-lead">
+        Have a question about Azure, cloud architecture, or something you saw in the lab?
+        Fill out the form below and I'll get back to you.
       </p>
-      <a href="/" class="btn-primary">
-        <span>Back to Home</span>
-        <span class="btn-arrow">→</span>
-      </a>
     </div>
+
+    <form class="contact-form" id="contactForm" novalidate>
+
+      <!-- Honeypot — hidden from real users, bots fill it in -->
+      <div class="form-honeypot" aria-hidden="true">
+        <input type="text" name="website" id="website" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="name">Name</label>
+          <input
+            class="form-input"
+            type="text"
+            id="name"
+            name="name"
+            placeholder="Your name"
+            maxlength="100"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input
+            class="form-input"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            maxlength="200"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="subject">Subject</label>
+        <input
+          class="form-input"
+          type="text"
+          id="subject"
+          name="subject"
+          placeholder="What is this about?"
+          maxlength="200"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="message">Message</label>
+        <textarea
+          class="form-textarea"
+          id="message"
+          name="message"
+          placeholder="Your message..."
+          maxlength="2000"
+          required
+        ></textarea>
+      </div>
+
+      <!-- Cloudflare Turnstile -->
+      <div class="turnstile-wrapper">
+        <div
+          class="cf-turnstile"
+          data-sitekey="0x4AAAAAAC4_HZSdqJ_3z5ws"
+          data-theme="dark"
+        ></div>
+      </div>
+
+      <div class="form-status" id="formStatus" role="alert" aria-live="polite"></div>
+
+      <button type="submit" class="contact-submit" id="submitBtn">
+        <span>Send Message</span>
+        <span class="btn-arrow">→</span>
+      </button>
+
+    </form>
+
   </main>
 
   <footer class="site-footer">
@@ -75,8 +313,9 @@
   </footer>
 
   <script>
-    const hamburger = document.getElementById('hamburger');
-    const mobileMenu = document.getElementById('mobileDropdown');
+    // ── Nav ──────────────────────────────────────────────────
+    const hamburger   = document.getElementById('hamburger');
+    const mobileMenu  = document.getElementById('mobileDropdown');
     hamburger.addEventListener('click', () => {
       const isOpen = mobileMenu.classList.toggle('open');
       hamburger.classList.toggle('open', isOpen);
@@ -89,11 +328,93 @@
         hamburger.setAttribute('aria-expanded', false);
       }
     });
-    const projectsBtn = document.getElementById('projectsBtn');
+    const projectsBtn  = document.getElementById('projectsBtn');
     const projectsDrop = document.getElementById('projectsDropdown');
     projectsBtn.addEventListener('click', e => { e.stopPropagation(); const isOpen = projectsDrop.classList.toggle('open'); projectsBtn.setAttribute('aria-expanded', isOpen); });
     document.addEventListener('click', e => { if (!projectsDrop.contains(e.target)) { projectsDrop.classList.remove('open'); projectsBtn.setAttribute('aria-expanded', false); } });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { projectsDrop.classList.remove('open'); projectsBtn.setAttribute('aria-expanded', false); } });
+
+    // ── Contact Form ─────────────────────────────────────────
+    const API_BASE = 'https://officesurveyappfunctions.azurewebsites.net/api';
+
+    const form       = document.getElementById('contactForm');
+    const submitBtn  = document.getElementById('submitBtn');
+    const statusBox  = document.getElementById('formStatus');
+
+    function showStatus(type, message) {
+      statusBox.className = 'form-status ' + type;
+      statusBox.textContent = message;
+    }
+
+    function clearStatus() {
+      statusBox.className = 'form-status';
+      statusBox.textContent = '';
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      clearStatus();
+
+      const name     = document.getElementById('name').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const subject  = document.getElementById('subject').value.trim();
+      const message  = document.getElementById('message').value.trim();
+      const honeypot = document.getElementById('website').value;
+
+      // Client-side validation
+      if (!name || !email || !subject || !message) {
+        showStatus('error', 'Please fill in all fields before submitting.');
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showStatus('error', 'Please enter a valid email address.');
+        return;
+      }
+
+      // Get the Turnstile token
+      const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+      if (!turnstileToken) {
+        showStatus('error', 'Please complete the security check before submitting.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.querySelector('span').textContent = 'Sending...';
+
+      try {
+        const res = await fetch(`${API_BASE}/contact`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            subject,
+            message,
+            website:        honeypot,
+            turnstileToken
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          showStatus('success', 'Message sent — thanks for reaching out. I\'ll get back to you soon.');
+          form.reset();
+          // Reset Turnstile widget so it can be used again
+          if (window.turnstile) turnstile.reset();
+        } else {
+          showStatus('error', data.error || 'Something went wrong. Please try again.');
+        }
+
+      } catch {
+        showStatus('error', 'Could not reach the server. Please check your connection and try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.querySelector('span').textContent = 'Send Message';
+      }
+    });
   </script>
 </body>
 </html>

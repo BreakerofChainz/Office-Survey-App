@@ -70,6 +70,8 @@ resource "azurerm_linux_function_app" "main" {
     LOGIC_APP_WEBHOOK_URL                 = var.logic_app_webhook_url
     DEPLOYMENT_STORAGE_CONNECTION_STRING  = azurerm_storage_account.function_storage.primary_connection_string
     WEBSITE_TIME_ZONE                     = "Eastern Standard Time"
+    TURNSTILE_SECRET_KEY                  = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=TurnstileSecretKey)"
+    CONTACT_WEBHOOK_URL                   = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=ContactWebhookUrl)"
   }
 
   # ── Site Config ───────────────────────────────────────────

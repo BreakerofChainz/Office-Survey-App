@@ -1,6 +1,6 @@
 # ============================================================
 # Sky Forged Labs — keyvault.tf
-# Creates Key Vault, stores the Cosmos connection string,
+# Creates Key Vault, stores secrets,
 # and grants access to both the Function App Managed Identity
 # and your personal admin account.
 # ============================================================
@@ -44,6 +44,33 @@ resource "azurerm_key_vault_secret" "ai_language_key" {
   ]
 }
 
+# ── Store the Cloudflare Turnstile secret key ────────────────
+# Used by the /api/contact Function to verify Turnstile tokens
+# server-side. Value supplied via terraform.tfvars.
+resource "azurerm_key_vault_secret" "turnstile_secret_key" {
+  name         = "TurnstileSecretKey"
+  value        = var.turnstile_secret_key
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [
+    azurerm_role_assignment.admin_kv_officer,
+  ]
+}
+
+# ── Store the contact Logic App webhook URL ──────────────────
+# HTTP trigger URL for the contact form email workflow.
+# Value supplied via terraform.tfvars after the Logic App
+# workflow is configured in the portal.
+resource "azurerm_key_vault_secret" "contact_webhook_url" {
+  name         = "ContactWebhookUrl"
+  value        = var.contact_webhook_url
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [
+    azurerm_role_assignment.admin_kv_officer,
+  ]
+}
+
 # ── RBAC: admin account gets Key Vault Secrets Officer ───────
 resource "azurerm_role_assignment" "admin_kv_officer" {
   scope                = azurerm_key_vault.main.id
@@ -52,11 +79,6 @@ resource "azurerm_role_assignment" "admin_kv_officer" {
 }
 
 # ── RBAC: Function App Managed Identity gets Secrets User ────
-# This role assignment is created after terraform apply assigns
-# the Managed Identity to the Function App. It depends on the
-# identity being present. We use a separate apply pass for this.
-# Commented out until after first apply completes successfully.
-#
 resource "azurerm_role_assignment" "function_kv_secrets_user" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets User"

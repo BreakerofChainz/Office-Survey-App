@@ -709,3 +709,144 @@ app.timer("dailyDigest", {
     }
   }
 });
+
+// ── POST /api/contact ────────────────────────────────────────
+// Receives contact form submissions from contact.html.
+//
+// Anti-abuse layers:
+//   1. Honeypot field — bots fill it, humans don't
+//   2. Cloudflare Turnstile token — verified server-side
+//   3. Field length limits — enforced here and in the HTML
+//
+// On success, POSTs the message payload to the Logic App
+// contact webhook, which sends an email via Gmail.
+//
+// Required Application Settings:
+//   TURNSTILE_SECRET_KEY   — Cloudflare secret key (from Key Vault)
+//   CONTACT_WEBHOOK_URL    — Logic App HTTP trigger URL (from Key Vault)
+app.http("contact", {
+  methods: ["POST", "OPTIONS"],
+  authLevel: "anonymous",
+  route: "contact",
+  handler: async (request, context) => {
+
+    // Handle CORS pre-flight
+    if (request.method === "OPTIONS") {
+      return { status: 204, headers: corsHeaders() };
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return {
+        status: 400,
+        headers: corsHeaders(),
+        jsonBody: { ok: false, error: "Malformed JSON" }
+      };
+    }
+
+    // ── Honeypot check ───────────────────────────────────────
+    // If the hidden website field has any value, this is a bot.
+    // Return 200 to avoid giving bots a signal to retry.
+    if (body.website) {
+      context.log("Contact honeypot triggered — submission silently dropped.");
+      return { status: 200, headers: corsHeaders(), jsonBody: { ok: true } };
+    }
+
+    // ── Field validation ─────────────────────────────────────
+    const { name, email, subject, message, turnstileToken } = body;
+
+    if (!name    || typeof name    !== "string" || name.trim().length    === 0 || name.trim().length    > 100) {
+      return { status: 400, headers: corsHeaders(), jsonBody: { ok: false, error: "Invalid name" } };
+    }
+    if (!email   || typeof email   !== "string" || email.trim().length   === 0 || email.trim().length   > 254) {
+      return { status: 400, headers: corsHeaders(), jsonBody: { ok: false, error: "Invalid email" } };
+    }
+    if (!subject || typeof subject !== "string" || subject.trim().length === 0 || subject.trim().length > 150) {
+      return { status: 400, headers: corsHeaders(), jsonBody: { ok: false, error: "Invalid subject" } };
+    }
+    if (!message || typeof message !== "string" || message.trim().length === 0 || message.trim().length > 2000) {
+      return { status: 400, headers: corsHeaders(), jsonBody: { ok: false, error: "Invalid message" } };
+    }
+    if (!turnstileToken || typeof turnstileToken !== "string") {
+      return { status: 400, headers: corsHeaders(), jsonBody: { ok: false, error: "Missing verification token" } };
+    }
+
+    // Basic email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return { status: 400, headers: corsHeaders(), jsonBody: { ok: false, error: "Invalid email format" } };
+    }
+
+    // ── Turnstile server-side verification ───────────────────
+    // Verifies the token with Cloudflare's siteverify endpoint.
+    // This is the critical check — client-side alone is not sufficient.
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+    if (!turnstileSecret) {
+      context.error("TURNSTILE_SECRET_KEY is not set — contact submission aborted.");
+      return { status: 500, headers: corsHeaders(), jsonBody: { ok: false, error: "Server configuration error" } };
+    }
+
+    try {
+      const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret:   turnstileSecret,
+          response: turnstileToken,
+          remoteip: request.headers.get("x-forwarded-for") || ""
+        })
+      });
+
+      const verifyData = await verifyRes.json();
+
+      if (!verifyData.success) {
+        context.warn("Turnstile verification failed:", JSON.stringify(verifyData["error-codes"]));
+        return {
+          status: 400,
+          headers: corsHeaders(),
+          jsonBody: { ok: false, error: "Verification failed. Please try again." }
+        };
+      }
+    } catch (err) {
+      context.error("Turnstile verification request failed:", err.message);
+      return { status: 500, headers: corsHeaders(), jsonBody: { ok: false, error: "Verification service unavailable" } };
+    }
+
+    // ── Forward to Logic App ─────────────────────────────────
+    const contactWebhookUrl = process.env.CONTACT_WEBHOOK_URL;
+    if (!contactWebhookUrl) {
+      context.error("CONTACT_WEBHOOK_URL is not set — contact submission aborted.");
+      return { status: 500, headers: corsHeaders(), jsonBody: { ok: false, error: "Server configuration error" } };
+    }
+
+    const emailPayload = {
+      name:    name.trim(),
+      email:   email.trim(),
+      subject: subject.trim(),
+      message: message.trim(),
+      sentAt:  new Date().toISOString()
+    };
+
+    try {
+      const webhookRes = await fetch(contactWebhookUrl, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(emailPayload)
+      });
+
+      if (!webhookRes.ok) {
+        context.error(`Contact Logic App webhook failed: ${webhookRes.status} ${webhookRes.statusText}`);
+        return { status: 500, headers: corsHeaders(), jsonBody: { ok: false, error: "Failed to send message" } };
+      }
+
+      context.log(`Contact form submitted by ${email.trim()} — forwarded to Logic App.`);
+      return { status: 200, headers: corsHeaders(), jsonBody: { ok: true } };
+
+    } catch (err) {
+      context.error("Contact webhook request failed:", err.message);
+      return { status: 500, headers: corsHeaders(), jsonBody: { ok: false, error: "Failed to send message" } };
+    }
+  }
+});
