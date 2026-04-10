@@ -1,0 +1,63 @@
+name: Deploy Function App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'host.json'
+
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC token request
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy Function App
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --omit=dev
+
+      - name: Create deployment zip
+        run: |
+          zip -r deploy.zip . \
+            --include "index.js" \
+            --include "host.json" \
+            --include "package.json" \
+            --include "package-lock.json" \
+            --include "node_modules/*"
+
+      - name: Log in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy zip to Function App
+        run: |
+          az functionapp deployment source config-zip \
+            --resource-group Office-Survey-App \
+            --name officesurveyappfunctions \
+            --src deploy.zip \
+            --build-remote false
+
+      - name: Log out of Azure
+        if: always()
+        run: az logout

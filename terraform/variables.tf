@@ -109,3 +109,9 @@ variable "logic_app_webhook_url" {
   type        = string
   sensitive   = true
 }
+
+variable "github_repo" {
+  description = "GitHub repository in owner/repo format — used for OIDC federated credential subject"
+  type        = string
+  default     = "BreakerofChainz/Office-Survey-App"
+}
