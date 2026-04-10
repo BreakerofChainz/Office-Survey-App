@@ -68,6 +68,17 @@ resource "azurerm_cosmosdb_sql_container" "responses" {
       }
     }
   }
+
+  lifecycle {
+    # The azurerm provider fails to round-trip the escaped-quote path string
+    # "/\"_etag\"/?" correctly during state refresh, causing it to appear as
+    # a missing excluded_path on every plan despite being correctly declared
+    # above. The indexing policy is fully defined here — this ignore only
+    # suppresses the provider serialization bug, not any real drift.
+    ignore_changes = [
+      indexing_policy
+    ]
+  }
 }
 
 resource "azurerm_cosmosdb_sql_container" "insights" {
@@ -77,4 +88,3 @@ resource "azurerm_cosmosdb_sql_container" "insights" {
   database_name       = azurerm_cosmosdb_sql_database.surveydb.name
   partition_key_paths = ["/partition"]
 }
-

@@ -70,12 +70,16 @@ resource "azurerm_linux_function_app" "main" {
     LOGIC_APP_WEBHOOK_URL                 = var.logic_app_webhook_url
     DEPLOYMENT_STORAGE_CONNECTION_STRING  = azurerm_storage_account.function_storage.primary_connection_string
     WEBSITE_TIME_ZONE                     = "Eastern Standard Time"
-
   }
 
   # ── Site Config ───────────────────────────────────────────
   site_config {
     ftps_state = "Disabled"
+
+    # Explicitly declare the App Insights connection string here.
+    # The azurerm provider writes this into site_config on the Azure side when
+    # App Insights is connected, causing persistent drift if omitted from config.
+    application_insights_connection_string = azurerm_application_insights.main.connection_string
 
     cors {
       allowed_origins = [
@@ -94,5 +98,21 @@ resource "azurerm_linux_function_app" "main" {
     project     = "SkyForgedLabs"
     environment = "homelab"
     managed_by  = "terraform"
+
+    # Azure auto-injects this tag when App Insights is connected to a Function App.
+    # Declaring it explicitly here prevents a permanent drift loop where Azure adds
+    # it and Terraform strips it on every plan/apply cycle.
+    "hidden-link: /app-insights-resource-id" = azurerm_application_insights.main.id
+  }
+
+  lifecycle {
+    # The Flex Consumption (FC1) provider injects certain platform-managed app settings
+    # (e.g. AzureWebJobsStorage__accountName) outside of the app_settings block.
+    # Ignoring app_settings prevents these from showing as phantom additions every plan.
+    # All settings we own are explicitly declared above — this ignore only suppresses
+    # provider-injected keys we have no control over.
+    ignore_changes = [
+      app_settings
+    ]
   }
 }

@@ -30,6 +30,12 @@ resource "azurerm_application_insights" "main" {
   workspace_id        = azurerm_log_analytics_workspace.main.id
   application_type    = "Node.JS"
 
+  # Cap daily ingestion at 1 GB to prevent surprise costs ($2.76/GB overage).
+  # The cap is a safety net — actual ingestion at this traffic level is well under 100 MB/month.
+  # notifications_disabled = false means Azure emails the subscription owner if the cap is hit.
+  daily_data_cap_in_gb                  = 1
+  daily_data_cap_notifications_disabled = false
+
   tags = {
     project     = "SkyForgedLabs"
     environment = "homelab"
