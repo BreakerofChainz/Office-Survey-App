@@ -70,8 +70,11 @@ resource "azurerm_linux_function_app" "main" {
     LOGIC_APP_WEBHOOK_URL                 = var.logic_app_webhook_url
     DEPLOYMENT_STORAGE_CONNECTION_STRING  = azurerm_storage_account.function_storage.primary_connection_string
     WEBSITE_TIME_ZONE                     = "Eastern Standard Time"
-    TURNSTILE_SECRET_KEY                  = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=TurnstileSecretKey)"
-    CONTACT_WEBHOOK_URL                   = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=ContactWebhookUrl)"
+
+    # Contact form — Turnstile secret key and Logic App contact webhook
+    # Both sourced from Key Vault to keep secrets out of state and config.
+    TURNSTILE_SECRET_KEY = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=TurnstileSecretKey)"
+    CONTACT_WEBHOOK_URL  = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=ContactWebhookUrl)"
   }
 
   # ── Site Config ───────────────────────────────────────────
@@ -104,17 +107,7 @@ resource "azurerm_linux_function_app" "main" {
     # Azure auto-injects this tag when App Insights is connected to a Function App.
     # Declaring it explicitly here prevents a permanent drift loop where Azure adds
     # it and Terraform strips it on every plan/apply cycle.
-    "hidden-link: /app-insights-resource-id" = azurerm_application_insights.main.id
-  }
-
-  lifecycle {
-    # The Flex Consumption (FC1) provider injects certain platform-managed app settings
-    # (e.g. AzureWebJobsStorage__accountName) outside of the app_settings block.
-    # Ignoring app_settings prevents these from showing as phantom additions every plan.
-    # All settings we own are explicitly declared above — this ignore only suppresses
-    # provider-injected keys we have no control over.
-    ignore_changes = [
-      app_settings
-    ]
+    # Using variables ensures the casing matches exactly what Azure stores.
+    "hidden-link: /app-insights-resource-id" = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Insights/components/${var.app_insights_name}"
   }
 }
