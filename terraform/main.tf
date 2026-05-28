@@ -1,10 +1,4 @@
-# ============================================================
-# Sky Forged Labs — main.tf
-# Provider configuration and resource group reference.
-# State is stored locally (terraform.tfstate).
-#
-# azurerm ~> 4.0 required for Flex Consumption Function App support.
-# ============================================================
+
 
 terraform {
   required_version = ">= 1.7.0"
@@ -36,12 +30,7 @@ provider "azurerm" {
 
 provider "azuread" {}
 
-# ── Reference the existing resource group ───────────────────
-# Data source — Terraform reads properties but does NOT manage
-# the lifecycle of this resource group.
 data "azurerm_resource_group" "main" {
   name = var.resource_group_name
 }
-
-# ── Current client config (used for Key Vault RBAC) ─────────
 data "azurerm_client_config" "current" {}
