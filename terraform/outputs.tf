@@ -1,9 +1,3 @@
-# ============================================================
-# Sky Forged Labs — outputs.tf
-# Values printed to the terminal after terraform apply.
-# Use these to verify resources and configure dependent systems.
-# ============================================================
-
 output "app_insights_connection_string" {
   description = "App Insights connection string — wired into Function App app_settings"
   value       = azurerm_application_insights.main.connection_string
