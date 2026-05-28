@@ -1,10 +1,3 @@
-# ============================================================
-# Sky Forged Labs — variables.tf
-# All configurable inputs for the infrastructure.
-# Sensitive values are marked sensitive = true and must be
-# supplied via terraform.tfvars (which is gitignored).
-# ============================================================
-
 variable "subscription_id" {
   description = "Azure subscription ID"
   type        = string
@@ -58,7 +51,6 @@ variable "static_web_app_name" {
   default     = "Office-Survey-App-SWA"
 }
 
-# ── New resource names ───────────────────────────────────────
 
 variable "key_vault_name" {
   description = "Name for the new Key Vault (globally unique, 3-24 chars)"
@@ -89,8 +81,6 @@ variable "logic_app_name" {
   type        = string
   default     = "skyforgedlabs-digest"
 }
-
-# ── Sensitive values — supply in terraform.tfvars only ───────
 
 variable "cosmos_connection_string" {
   description = "Cosmos DB primary connection string — passed directly as a Function App env var"
