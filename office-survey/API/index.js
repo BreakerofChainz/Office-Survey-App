@@ -3,8 +3,6 @@ const { CosmosClient } = require("@azure/cosmos");
 const crypto = require("crypto");
 
 // ── Cosmos Setup ────────────────────────────────────────────
-// COSMOS_CONNECTION_STRING must be set in Azure Function App Settings.
-// Never hardcode this value.
 const COSMOS_CONNECTION_STRING = process.env.COSMOS_CONNECTION_STRING;
 if (!COSMOS_CONNECTION_STRING) {
   throw new Error("Missing COSMOS_CONNECTION_STRING in Application Settings");
@@ -39,19 +37,15 @@ function validateSubmission(body) {
     return { valid: false, error: "Invalid request body" };
   }
 
-  // Honeypot – bots often fill hidden fields
   if (body.website) {
     return { valid: false, error: "Submission rejected" };
   }
 
-  // Must have an answers object
   if (!body.answers || typeof body.answers !== "object") {
     return { valid: false, error: "Missing answers object" };
   }
 
   const answers = body.answers;
-
-  // Every expected question must be present and have a non-empty string response
   for (const qid of VALID_QUESTION_IDS) {
     const entry = answers[qid];
     if (!entry || typeof entry !== "object") {
@@ -76,9 +70,8 @@ function validateSubmission(body) {
   return { valid: true };
 }
 
-// ── CORS Helper ─────────────────────────────────────────────
-// Allows requests from your Static Web App domain.
-// Update ALLOWED_ORIGIN if your custom domain changes.
+// ── CORS Helper ────────────────────────────────────────────
+
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://skyforgedlabs.com";
 
 function corsHeaders(extraMethods = "") {
@@ -91,8 +84,6 @@ function corsHeaders(extraMethods = "") {
 }
 
 // ── Aggregation Helper ───────────────────────────────────────
-// Builds per-question counts from an array of Cosmos documents.
-// Used by both /api/stats and the daily digest timer.
 function aggregateCounts(docs) {
   const counts = {};
   for (const qid of VALID_QUESTION_IDS) {
@@ -177,14 +168,7 @@ function buildSummaryInput(topThree, totalResponses) {
 }
 
 // ── Azure AI Language Summarization ─────────────────────────
-// Submits a text paragraph to the Language abstractive summarization
-// API and polls until the job completes or times out.
-// Returns the summary string or null on failure.
-//
-// The Language API is asynchronous — we POST to start a job,
-// then GET the job status until status === "succeeded".
-// Microsoft recommends polling at 1 second intervals or more.
-// We use 2 second intervals with a 30 attempt maximum (60 second timeout).
+
 async function generateSummary(inputText, context) {
   const endpoint = process.env.AI_LANGUAGE_ENDPOINT;
   const apiKey   = process.env.AI_LANGUAGE_KEY;
@@ -385,12 +369,7 @@ app.http("submit", {
 // Reads documents from Cosmos DB and returns aggregated
 // response counts per question per answer option.
 // Also reads the cached AI summary from the insights container.
-//
-// Optional query parameter:
-//   ?since=YYYY-MM-DD  — filters results to documents submitted on
-//                        or after the given date (UTC). The Logic App
-//                        digest calls this with today's date to get
-//                        the daily count and breakdown.
+
 app.http("stats", {
   methods: ["GET", "OPTIONS"],
   authLevel: "anonymous",
@@ -505,9 +484,7 @@ app.http("stats", {
 // Returns individual anonymized response records for the dashboard
 // cross-filtering feature. Capped at 1000 most recent responses
 // to prevent oversized payloads if the survey scales unexpectedly.
-//
-// Each record contains only: id, submittedAt, and flattened answers
-// (response strings only — question text is stripped to minimize payload).
+
 app.http("responses", {
   methods: ["GET", "OPTIONS"],
   authLevel: "anonymous",
@@ -569,13 +546,7 @@ app.http("responses", {
 
 // ── Timer: Daily Digest ─────────────────────────────────────
 // Fires every day at 11:59 PM Eastern (04:59 UTC).
-// Queries Cosmos for today's count and all-time count,
-// runs significance check against stored summary snapshot,
-// conditionally regenerates the AI summary via Language API,
-// stores updated summary to insights container,
-// then POSTs digest payload to Logic App webhook.
-//
-// LOGIC_APP_WEBHOOK_URL must be set in Application Settings.
+
 app.timer("dailyDigest", {
   schedule: "0 55 23 * * *",   // 11:55 PM UTC — fires just before UTC day rolls over
 
@@ -712,18 +683,7 @@ app.timer("dailyDigest", {
 
 // ── POST /api/contact ────────────────────────────────────────
 // Receives contact form submissions from contact.html.
-//
-// Anti-abuse layers:
-//   1. Honeypot field — bots fill it, humans don't
-//   2. Cloudflare Turnstile token — verified server-side
-//   3. Field length limits — enforced here and in the HTML
-//
-// On success, POSTs the message payload to the Logic App
-// contact webhook, which sends an email via Gmail.
-//
-// Required Application Settings:
-//   TURNSTILE_SECRET_KEY   — Cloudflare secret key (from Key Vault)
-//   CONTACT_WEBHOOK_URL    — Logic App HTTP trigger URL (from Key Vault)
+
 app.http("contact", {
   methods: ["POST", "OPTIONS"],
   authLevel: "anonymous",
@@ -746,9 +706,6 @@ app.http("contact", {
       };
     }
 
-    // ── Honeypot check ───────────────────────────────────────
-    // If the hidden website field has any value, this is a bot.
-    // Return 200 to avoid giving bots a signal to retry.
     if (body.website) {
       context.log("Contact honeypot triggered — submission silently dropped.");
       return { status: 200, headers: corsHeaders(), jsonBody: { ok: true } };
