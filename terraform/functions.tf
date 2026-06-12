@@ -1,8 +1,3 @@
-# ============================================================
-# Sky Forged Labs — functions.tf
-# ============================================================
-
-# ── Storage Account ─────────────────────────────────────────
 resource "azurerm_storage_account" "function_storage" {
   name                     = var.storage_account_name
   resource_group_name      = data.azurerm_resource_group.main.name
@@ -20,7 +15,6 @@ resource "azurerm_storage_account" "function_storage" {
   }
 }
 
-# ── Service Plan (Flex Consumption) ─────────────────────────
 resource "azurerm_service_plan" "main" {
   name                = "ASP-OfficeSurveyApp-963c"
   resource_group_name = data.azurerm_resource_group.main.name
@@ -35,7 +29,6 @@ resource "azurerm_service_plan" "main" {
   }
 }
 
-# ── Function App (Flex Consumption, Linux) ──────────────────
 resource "azurerm_linux_function_app" "main" {
   name                = var.function_app_name
   resource_group_name = data.azurerm_resource_group.main.name
@@ -58,7 +51,6 @@ resource "azurerm_linux_function_app" "main" {
     type = "SystemAssigned"
   }
 
-  # ── Application Settings ──────────────────────────────────
   app_settings = {
     FUNCTIONS_EXTENSION_VERSION = "~4"
 
@@ -70,20 +62,12 @@ resource "azurerm_linux_function_app" "main" {
     LOGIC_APP_WEBHOOK_URL                 = var.logic_app_webhook_url
     DEPLOYMENT_STORAGE_CONNECTION_STRING  = azurerm_storage_account.function_storage.primary_connection_string
     WEBSITE_TIME_ZONE                     = "Eastern Standard Time"
-
-    # Contact form — Turnstile secret key and Logic App contact webhook
-    # Both sourced from Key Vault to keep secrets out of state and config.
     TURNSTILE_SECRET_KEY = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=TurnstileSecretKey)"
     CONTACT_WEBHOOK_URL  = "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=ContactWebhookUrl)"
   }
 
-  # ── Site Config ───────────────────────────────────────────
   site_config {
     ftps_state = "Disabled"
-
-    # Explicitly declare the App Insights connection string here.
-    # The azurerm provider writes this into site_config on the Azure side when
-    # App Insights is connected, causing persistent drift if omitted from config.
     application_insights_connection_string = azurerm_application_insights.main.connection_string
 
     cors {
@@ -103,11 +87,6 @@ resource "azurerm_linux_function_app" "main" {
     project     = "SkyForgedLabs"
     environment = "homelab"
     managed_by  = "terraform"
-
-    # Azure auto-injects this tag when App Insights is connected to a Function App.
-    # Declaring it explicitly here prevents a permanent drift loop where Azure adds
-    # it and Terraform strips it on every plan/apply cycle.
-    # Using variables ensures the casing matches exactly what Azure stores.
     "hidden-link: /app-insights-resource-id" = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Insights/components/${var.app_insights_name}"
   }
 }

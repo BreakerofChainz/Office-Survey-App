@@ -1,9 +1,3 @@
-# ============================================================
-# Sky Forged Labs — keyvault.tf
-# Creates Key Vault, stores secrets,
-# and grants access to both the Function App Managed Identity
-# and your personal admin account.
-# ============================================================
 
 resource "azurerm_key_vault" "main" {
   name                = var.key_vault_name
@@ -22,7 +16,6 @@ resource "azurerm_key_vault" "main" {
   }
 }
 
-# ── Store the Cosmos connection string as a secret ───────────
 resource "azurerm_key_vault_secret" "cosmos_connection_string" {
   name         = "CosmosConnectionString"
   value        = azurerm_cosmosdb_account.main.primary_sql_connection_string
@@ -33,7 +26,6 @@ resource "azurerm_key_vault_secret" "cosmos_connection_string" {
   ]
 }
 
-# ── Store the AI Language key as a secret ───────────────────
 resource "azurerm_key_vault_secret" "ai_language_key" {
   name         = "AiLanguageKey"
   value        = azurerm_cognitive_account.language.primary_access_key
@@ -44,9 +36,6 @@ resource "azurerm_key_vault_secret" "ai_language_key" {
   ]
 }
 
-# ── Store the Cloudflare Turnstile secret key ────────────────
-# Used by the /api/contact Function to verify Turnstile tokens
-# server-side. Value supplied via terraform.tfvars.
 resource "azurerm_key_vault_secret" "turnstile_secret_key" {
   name         = "TurnstileSecretKey"
   value        = var.turnstile_secret_key
@@ -57,10 +46,6 @@ resource "azurerm_key_vault_secret" "turnstile_secret_key" {
   ]
 }
 
-# ── Store the contact Logic App webhook URL ──────────────────
-# HTTP trigger URL for the contact form email workflow.
-# Value supplied via terraform.tfvars after the Logic App
-# workflow is configured in the portal.
 resource "azurerm_key_vault_secret" "contact_webhook_url" {
   name         = "ContactWebhookUrl"
   value        = var.contact_webhook_url
@@ -71,14 +56,14 @@ resource "azurerm_key_vault_secret" "contact_webhook_url" {
   ]
 }
 
-# ── RBAC: admin account gets Key Vault Secrets Officer ───────
+
 resource "azurerm_role_assignment" "admin_kv_officer" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = var.admin_object_id
 }
 
-# ── RBAC: Function App Managed Identity gets Secrets User ────
+
 resource "azurerm_role_assignment" "function_kv_secrets_user" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets User"

@@ -1,19 +1,3 @@
-# ============================================================
-# Sky Forged Labs — policy.tf
-# Azure Policy assignments scoped to the Office-Survey-App
-# resource group.
-#
-# All policies are set to Audit mode — they flag non-compliant
-# resources without blocking deployments. Switch to Deny once
-# all existing resources are confirmed compliant.
-#
-# Built-in policy definition IDs are stable GUIDs that do not
-# change between Azure environments.
-# ============================================================
-
-# ── 1. Require tags: project, environment, managed_by ───────
-# Audits resources that are missing any of the three standard
-# tags used across all Sky Forged Labs resources.
 
 resource "azurerm_resource_group_policy_assignment" "require_tag_project" {
   name                 = "require-tag-project"
@@ -51,10 +35,6 @@ resource "azurerm_resource_group_policy_assignment" "require_tag_managed_by" {
   })
 }
 
-# ── 2. Allowed locations: East US only ──────────────────────
-# Audits resources deployed outside of East US.
-# Enforces regional consistency and avoids accidental
-# cross-region deployments that could increase latency or cost.
 
 resource "azurerm_resource_group_policy_assignment" "allowed_locations" {
   name                 = "allowed-locations-eastus"
@@ -67,11 +47,6 @@ resource "azurerm_resource_group_policy_assignment" "allowed_locations" {
     listOfAllowedLocations = { value = ["eastus"] }
   })
 }
-
-# ── 3. Audit storage accounts with public blob access ───────
-# Audits storage accounts that allow public blob access.
-# All storage accounts in this project have public access
-# disabled — this policy enforces that going forward.
 
 resource "azurerm_resource_group_policy_assignment" "deny_storage_public_access" {
   name                 = "audit-storage-public-access"
