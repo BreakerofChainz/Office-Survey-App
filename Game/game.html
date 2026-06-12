@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sky Forged Labs — The Forgotten Keep</title>
+  <meta name="description" content="Play The Forgotten Keep — a browser-based fantasy platformer built on Azure. Compete for the top of the leaderboard." />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/site.css" />
+  <style>
+    /* ── Game page layout ── */
+    .game-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem 4rem;
+      gap: 1.5rem;
+    }
+
+    .game-header {
+      text-align: center;
+      max-width: 640px;
+    }
+
+    .game-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    .game-title span { color: var(--accent); }
+
+    .game-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Canvas wrapper ── */
+    .game-canvas-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,166,35,0.08);
+      background: #0a0c14;
+    }
+
+    #game-canvas-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    #game-canvas-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    /* ── Overlays (username modal, game-over) ── */
+    /*
+     * All color values here use hardcoded fallbacks alongside CSS variables.
+     * The overlay sits inside the canvas wrapper and must look correct even
+     * before site.css fully resolves (e.g. during local file:// testing or
+     * before the Google Fonts preconnect completes).
+     * Rule: every color property uses  color: var(--token, #hardcode)  pattern.
+     */
+    .game-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 12, 20, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100;
+      /* Reduced padding + gap so content fits at small canvas sizes.
+         The canvas wrapper can be as narrow as ~320px on mobile. */
+      padding: 1.25rem 1.5rem;
+      gap: 0.85rem;
+      overflow-y: auto;   /* safety valve if viewport is very short */
+      transition: opacity 0.3s ease;
+    }
+
+    .game-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .overlay-icon {
+      font-size: 2rem;    /* was 3rem — shrunk to reclaim vertical space */
+      line-height: 1;
+    }
+
+    .overlay-title {
+      font-family: var(--font-display, system-ui, sans-serif);
+      /* Fixed px size: clamp with vw units misbehaves when the canvas is
+         CSS-scaled smaller than its natural 960px width */
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text, #e8ecf4);   /* ← hardcoded fallback */
+      text-align: center;
+      margin: 0;
+    }
+
+    .overlay-title span { color: var(--accent, #f5a623); }
+
+    .overlay-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted, #7a8499);   /* ← hardcoded fallback */
+      text-align: center;
+      max-width: 360px;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    /* ── Username input ── */
+    .username-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .username-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted, #7a8499);
+      align-self: flex-start;
+    }
+
+    .username-input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      /* Hardcoded dark background + light text — never relies on CSS vars alone.
+         This is what was causing the invisible-text bug when site.css wasn't
+         fully applied (file:// protocol or slow load). */
+      background: #1e2535;
+      background: var(--surface2, #1e2535);
+      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid var(--border, rgba(255,255,255,0.12));
+      border-radius: 10px;
+      border-radius: var(--radius, 10px);
+      color: #e8ecf4;            /* hardcoded — this is the critical fix */
+      color: var(--text, #e8ecf4);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-family: var(--font-body, system-ui, sans-serif);
+      font-size: 0.95rem;
+      font-weight: 500;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      /* Prevent iOS Safari auto-zoom on inputs smaller than 16px */
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .username-input:focus {
+      border-color: #f5a623;
+      border-color: var(--accent, #f5a623);
+      box-shadow: 0 0 0 3px rgba(245,166,35,0.18);
+    }
+
+    .username-input::placeholder {
+      color: #4a5568;
+      opacity: 1;   /* Firefox reduces placeholder opacity by default */
+    }
+
+    .username-error {
+      font-size: 0.76rem;
+      color: #f87171;
+      align-self: flex-start;
+      min-height: 1em;
+    }
+
+    /* ── Scoring rules blurb ── */
+    .score-rules {
+      display: flex;
+      gap: 1.25rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid var(--border, rgba(255,255,255,0.1));
+      border-radius: 10px;
+      border-radius: var(--radius, 10px);
+      padding: 0.65rem 1rem;
+      background: #161b26;
+      background: var(--surface, #161b26);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .score-rule {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+    }
+
+    .score-rule-val {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f5a623;
+      color: var(--accent, #f5a623);
+    }
+
+    .score-rule-label {
+      font-size: 0.67rem;
+      color: #7a8499;
+      color: var(--text-muted, #7a8499);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Game-over screen ── */
+    .final-score-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .final-score-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #7a8499;
+      color: var(--text-muted, #7a8499);
+    }
+
+    .final-score-value {
+      font-family: var(--font-display, system-ui, sans-serif);
+      font-size: 3rem;
+      font-weight: 700;
+      color: #f5a623;
+      color: var(--accent, #f5a623);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .final-score-breakdown {
+      font-size: 0.78rem;
+      color: #7a8499;
+      color: var(--text-muted, #7a8499);
+      text-align: center;
+    }
+
+    .gameover-buttons {
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ── Page-level title/subtitle (above canvas) — hardcoded fallbacks ── */
+    .game-title  { color: #e8ecf4; color: var(--text, #e8ecf4); }
+    .game-title span { color: #f5a623; color: var(--accent, #f5a623); }
+    .game-subtitle { color: #7a8499; color: var(--text-muted, #7a8499); }
+
+    /* ── Victory vs defeat colors ── */
+    .overlay-title.victory span { color: #4ade80; }
+    .final-score-value.victory  { color: #4ade80; }
+
+    /* ── Controls hint ── */
+    .controls-hint {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      color: #7a8499;
+      color: var(--text-muted, #7a8499);
+    }
+
+    .key-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 26px;
+      height: 22px;
+      padding: 0 5px;
+      background: #1e2535;
+      background: var(--surface2, #1e2535);
+      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid var(--border, rgba(255,255,255,0.12));
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #e8ecf4;
+      color: var(--text, #e8ecf4);
+      font-family: monospace;
+    }
+
+    /* ── Below-canvas info strip ── */
+    .game-info-strip {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .game-tag-list {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .game-tag {
+      padding: 0.25rem 0.65rem;
+      background: #1e2535;
+      background: var(--surface2, #1e2535);
+      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid var(--border, rgba(255,255,255,0.1));
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: #7a8499;
+      color: var(--text-muted, #7a8499);
+    }
+
+    .game-leaderboard-link {
+      font-size: 0.85rem;
+      color: #4fc3f7;
+      color: var(--accent2, #4fc3f7);
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .game-leaderboard-link:hover { color: #81d4fa; text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .game-main { padding: 1.5rem 1rem 3rem; }
+      .score-rules { gap: 1rem; }
+      .gameover-buttons { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+
+  <!-- ── Site Shell Nav ── -->
+  <header class="site-header">
+    <a href="/" class="logo" aria-label="Sky Forged Labs — Home">
+      <img src="/Logo.png" alt="Sky Forged Labs" class="logo-img" />
+    </a>
+    <nav class="site-nav" id="siteNav">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/about" class="nav-link">About</a>
+      <a href="/resume" class="nav-link">Resume</a>
+      <a href="/contact" class="nav-link">Contact</a>
+      <div class="nav-dropdown" id="projectsDropdown">
+        <button class="nav-link nav-dropdown-btn" aria-expanded="false" aria-haspopup="true" id="projectsBtn">
+          Projects <span class="dropdown-caret">▾</span>
+        </button>
+        <div class="nav-dropdown-menu" id="projectsMenu" role="menu">
+          <a href="/office-survey" class="dropdown-item" role="menuitem">
+            <span class="dropdown-item-icon" aria-hidden="true" style="font-size:0.9rem;font-weight:700;color:#4fc3f7;font-family:monospace;letter-spacing:-0.05em">SRV</span>
+            <span>
+              <span class="dropdown-item-title">Office Survey</span>
+              <span class="dropdown-item-desc">Azure Functions · Cosmos DB · AI Language</span>
+            </span>
+          </a>
+          <a href="/game" class="dropdown-item" role="menuitem">
+            <span class="dropdown-item-icon" aria-hidden="true" style="font-size:0.9rem;font-weight:700;color:#f5a623;font-family:monospace">RPG</span>
+            <span>
+              <span class="dropdown-item-title">The Forgotten Keep</span>
+              <span class="dropdown-item-desc">Phaser.js · APIM · Cosmos DB</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-dropdown" id="mobileDropdown">
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/resume">Resume</a>
+      <a href="/contact">Contact</a>
+      <div class="mobile-section-label">Projects</div>
+      <a href="/office-survey" class="mobile-project-link">Office Survey</a>
+      <a href="/game" class="mobile-project-link active">The Forgotten Keep</a>
+    </div>
+  </header>
+
+  <main class="game-main">
+
+    <div class="game-header">
+      <h1 class="game-title">The <span>Forgotten Keep</span></h1>
+      <p class="game-subtitle">
+        A browser-based fantasy platformer. Navigate the ruins, survive the hazards, reach the banner.<br>
+        Your score is submitted to Azure and posted to the leaderboard.
+      </p>
+    </div>
+
+    <!-- ── Game Canvas ── -->
+    <div class="game-canvas-wrapper">
+      <div id="game-canvas-container"></div>
+
+      <!-- ── Overlay 1: Username / Start ── -->
+      <div class="game-overlay" id="overlay-start">
+        <div class="overlay-icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Sword 1: top-left to bottom-right -->
+            <rect x="5" y="21" width="38" height="5" rx="1.5" fill="#d1d5db" transform="rotate(-45 5 21)"/>
+            <polygon points="5,5 10,10 7,13" fill="#9ca3af"/>
+            <rect x="32" y="35" width="10" height="4" rx="1" fill="#7c3aed" transform="rotate(-45 32 35)"/>
+            <!-- Sword 2: top-right to bottom-left -->
+            <rect x="5" y="22" width="38" height="5" rx="1.5" fill="#d1d5db" transform="rotate(45 24 24)"/>
+            <polygon points="43,5 38,10 41,13" fill="#9ca3af"/>
+            <rect x="6" y="35" width="10" height="4" rx="1" fill="#7c3aed" transform="rotate(45 11 37)"/>
+            <!-- Center spark -->
+            <circle cx="24" cy="24" r="3" fill="#f5a623" opacity="0.9"/>
+          </svg>
+        </div>
+        <h2 class="overlay-title">The <span>Forgotten Keep</span></h2>
+        <p class="overlay-desc">
+          Navigate crumbling platforms, avoid spikes, evade the guardian, and reach the banner at the far end of the keep.
+        </p>
+
+        <div class="score-rules">
+          <div class="score-rule">
+            <span class="score-rule-val">1,000</span>
+            <span class="score-rule-label">Start</span>
+          </div>
+          <div class="score-rule">
+            <span class="score-rule-val">−1/sec</span>
+            <span class="score-rule-label">Time decay</span>
+          </div>
+          <div class="score-rule">
+            <span class="score-rule-val">−50</span>
+            <span class="score-rule-label">Per death</span>
+          </div>
+        </div>
+
+        <div class="username-form">
+          <label class="username-label" for="username-input">Enter your name</label>
+          <input
+            type="text"
+            id="username-input"
+            class="username-input"
+            placeholder="Adventurer"
+            maxlength="15"
+            autocomplete="off"
+            spellcheck="false"
+            autofocus
+          />
+          <span class="username-error" id="username-error" aria-live="polite"></span>
+        </div>
+
+        <div class="controls-hint">
+          <span class="control-item"><span class="key-badge">←</span><span class="key-badge">→</span> Move</span>
+          <span class="control-item"><span class="key-badge">Space</span> Jump</span>
+          <span class="control-item"><span class="key-badge">↑</span> Jump</span>
+        </div>
+
+        <button class="btn-primary" id="btn-start">
+          Begin Adventure <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <!-- ── Overlay 2: Game Over / Victory ── -->
+      <div class="game-overlay hidden" id="overlay-gameover">
+        <div class="overlay-icon" id="gameover-icon" aria-hidden="true">
+          <svg id="gameover-svg" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Skull shape (default: defeat) -->
+            <ellipse cx="24" cy="20" rx="14" ry="13" fill="#374151"/>
+            <rect x="13" y="30" width="22" height="10" rx="2" fill="#374151"/>
+            <circle cx="18" cy="19" r="4" fill="#0e1117"/>
+            <circle cx="30" cy="19" r="4" fill="#0e1117"/>
+            <rect x="17" y="33" width="4" height="6" rx="1" fill="#0e1117"/>
+            <rect x="23" y="33" width="4" height="6" rx="1" fill="#0e1117"/>
+            <rect x="29" y="33" width="4" height="6" rx="1" fill="#0e1117"/>
+          </svg>
+        </div>
+        <h2 class="overlay-title" id="gameover-title">The Keep <span>Claims Another</span></h2>
+
+        <div class="final-score-display">
+          <span class="final-score-label">Final Score</span>
+          <span class="final-score-value" id="final-score-value">0</span>
+          <span class="final-score-breakdown" id="final-score-breakdown"></span>
+        </div>
+
+        <div class="gameover-buttons">
+          <button class="btn-primary" id="btn-play-again">
+            Try Again <span class="btn-arrow">↺</span>
+          </button>
+          <a href="/leaderboard" class="btn-secondary">View Leaderboard →</a>
+        </div>
+      </div>
+
+    </div><!-- /.game-canvas-wrapper -->
+
+    <!-- ── Info strip below canvas ── -->
+    <div class="game-info-strip">
+      <div class="game-tag-list">
+        <span class="game-tag">Phaser.js</span>
+        <span class="game-tag">Azure Functions</span>
+        <span class="game-tag">Cosmos DB</span>
+        <span class="game-tag">APIM</span>
+        <span class="game-tag">Key Vault</span>
+      </div>
+      <a href="/leaderboard" class="game-leaderboard-link">Leaderboard →</a>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <span>© 2026 Sky Forged Labs · Clayton Puetzer</span>
+    <a href="/office-survey/privacy">Privacy</a>
+  </footer>
+
+  <!-- ── Phaser 3 via CDN ── -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.87.0/phaser.min.js"></script>
+
+  <!-- ── Game Logic ── -->
+  <script src="/game.js"></script>
+
+  <!-- ── Site nav scripts ── -->
+  <script>
+    // Hamburger
+    const hamburger   = document.getElementById('hamburger');
+    const mobileMenu  = document.getElementById('mobileDropdown');
+    hamburger.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('open', isOpen);
+      hamburger.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', e => {
+      if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', false);
+      }
+    });
+
+    // Projects dropdown
+    const projectsBtn  = document.getElementById('projectsBtn');
+    const projectsMenu = document.getElementById('projectsMenu');
+    const projectsDrop = document.getElementById('projectsDropdown');
+    projectsBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = projectsDrop.classList.toggle('open');
+      projectsBtn.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', e => {
+      if (!projectsDrop.contains(e.target)) {
+        projectsDrop.classList.remove('open');
+        projectsBtn.setAttribute('aria-expanded', false);
+      }
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        projectsDrop.classList.remove('open');
+        projectsBtn.setAttribute('aria-expanded', false);
+      }
+    });
+
+    // ── Username validation & game start ──────────────────────────────
+    const btnStart      = document.getElementById('btn-start');
+    const usernameInput = document.getElementById('username-input');
+    const usernameError = document.getElementById('username-error');
+
+    function sanitizeUsername(raw) {
+      // Strip HTML/script tags, trim whitespace
+      return raw.replace(/<[^>]*>/g, '').trim();
+    }
+
+    function validateUsername(raw) {
+      const clean = sanitizeUsername(raw);
+      if (!clean) return { ok: false, error: 'Please enter a name before starting.' };
+      if (clean.length > 15) return { ok: false, error: 'Name must be 15 characters or fewer.' };
+      // Allow letters, numbers, spaces, hyphens, underscores, apostrophes
+      if (!/^[\w\s'\-]+$/.test(clean)) return { ok: false, error: 'Name contains invalid characters.' };
+      return { ok: true, value: clean };
+    }
+
+    btnStart.addEventListener('click', () => {
+      const result = validateUsername(usernameInput.value);
+      if (!result.ok) {
+        usernameError.textContent = result.error;
+        usernameInput.focus();
+        return;
+      }
+      usernameError.textContent = '';
+      // Blur and disable the input so it cannot intercept keystrokes during gameplay
+      usernameInput.blur();
+      usernameInput.disabled = true;
+      // Hide the overlay and start the game
+      document.getElementById('overlay-start').classList.add('hidden');
+      if (window.startGame) window.startGame(result.value);
+    });
+
+    usernameInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') btnStart.click();
+    });
+
+    // ── Play-again button ──────────────────────────────────────────────
+    document.getElementById('btn-play-again').addEventListener('click', () => {
+      document.getElementById('overlay-gameover').classList.add('hidden');
+      document.getElementById('overlay-start').classList.remove('hidden');
+      usernameInput.disabled = false;
+      usernameInput.value = '';
+      usernameInput.focus();
+      if (window.resetGame) window.resetGame();
+    });
+  </script>
+
+</body>
+</html>
